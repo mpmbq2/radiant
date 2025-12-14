@@ -1,21 +1,27 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { CreateNoteInput, UpdateNoteInput, NoteWithContent } from './database/schema';
 
 // Expose protected methods that allow the renderer process to use
 // ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
-  // Example: send a message to main process
-  sendMessage: (channel: string, data: unknown) => {
-    // Whitelist channels
-    const validChannels = ['toMain'];
-    if (validChannels.includes(channel)) {
-      ipcRenderer.send(channel, data);
-    }
-  },
-  // Example: receive a message from main process
-  onMessage: (channel: string, callback: (data: unknown) => void) => {
-    const validChannels = ['fromMain'];
-    if (validChannels.includes(channel)) {
-      ipcRenderer.on(channel, (_event, data) => callback(data));
-    }
+  // Notes operations
+  notes: {
+    create: (input: CreateNoteInput): Promise<NoteWithContent> =>
+      ipcRenderer.invoke('notes:create', input),
+
+    getById: (noteId: string): Promise<NoteWithContent | null> =>
+      ipcRenderer.invoke('notes:getById', noteId),
+
+    getAll: (): Promise<NoteWithContent[]> => ipcRenderer.invoke('notes:getAll'),
+
+    update: (input: UpdateNoteInput): Promise<NoteWithContent | null> =>
+      ipcRenderer.invoke('notes:update', input),
+
+    delete: (noteId: string): Promise<void> => ipcRenderer.invoke('notes:delete', noteId),
+
+    search: (query: string): Promise<NoteWithContent[]> =>
+      ipcRenderer.invoke('notes:search', query),
+
+    getAllTags: (): Promise<string[]> => ipcRenderer.invoke('notes:getAllTags'),
   },
 });

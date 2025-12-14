@@ -1,6 +1,17 @@
+import { CreateNoteInput, UpdateNoteInput, NoteWithContent } from './database/schema';
+
+export interface NotesAPI {
+  create: (input: CreateNoteInput) => Promise<NoteWithContent>;
+  getById: (noteId: string) => Promise<NoteWithContent | null>;
+  getAll: () => Promise<NoteWithContent[]>;
+  update: (input: UpdateNoteInput) => Promise<NoteWithContent | null>;
+  delete: (noteId: string) => Promise<void>;
+  search: (query: string) => Promise<NoteWithContent[]>;
+  getAllTags: () => Promise<string[]>;
+}
+
 export interface ElectronAPI {
-  sendMessage: (channel: string, data: unknown) => void;
-  onMessage: (channel: string, callback: (data: unknown) => void) => void;
+  notes: NotesAPI;
 }
 
 declare global {
