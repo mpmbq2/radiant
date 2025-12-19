@@ -37,7 +37,7 @@
     }
   },
 
-  "postCreateCommand": "npm install",
+  "postCreateCommand": "bash -c 'curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash && npm install'",
 
   "remoteUser": "node",
 

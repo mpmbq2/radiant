@@ -9,6 +9,7 @@ This dev container provides a consistent development environment for the Radiant
 - **npm 10.x** - Package manager
 - **Python 3.11** - Required for building native modules (better-sqlite3)
 - **Git** - Version control
+- **Beads (bd)** - Git-native issue tracking CLI
 - **Build essentials** - C/C++ compilers for native dependencies
 
 ### VS Code Extensions
@@ -28,8 +29,9 @@ This dev container provides a consistent development environment for the Radiant
 When you open this project in a dev container:
 
 1. The container will build automatically
-2. `npm install` runs automatically after creation
-3. Dependencies including native modules (better-sqlite3) will compile
+2. Beads CLI (`bd`) installs automatically for issue tracking
+3. `npm install` runs automatically after beads installation
+4. Dependencies including native modules (better-sqlite3) will compile
 
 ## Development Workflow
 
