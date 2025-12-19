@@ -32,8 +32,6 @@
 ## Project Phases
 
 ### Phase 0: Environment Setup and Initialization
-**Duration**: 1-2 days  
-**Ownership**: 100% AI-generated
 
 **Scope:**
 - Install Node.js, npm, and development tools
@@ -55,8 +53,6 @@
 ---
 
 ### Phase 1: Core Data Layer and CRUD Operations
-**Duration**: 2-3 days  
-**Ownership**: 100% AI-generated
 
 **Scope:**
 - Design SQLite schema for notes (id, title, content, created_at, modified_at, tags)
@@ -81,8 +77,6 @@
 ---
 
 ### Phase 2: Basic UI and Editor Integration
-**Duration**: 2-3 days  
-**Ownership**: 100% AI-generated
 
 **Scope:**
 - Create Svelte component structure (App, NoteList, Editor, Sidebar)
@@ -107,8 +101,6 @@
 ---
 
 ### Phase 3: Note Filter System (YOUR CODE)
-**Duration**: 3-5 days  
-**Ownership**: 100% manually coded by you
 
 **Scope:**
 - Design and implement FilterInterface base class
@@ -144,8 +136,6 @@
 ---
 
 ### Phase 4: Search Implementation
-**Duration**: 2-3 days  
-**Ownership**: Split - AI generates MiniSearch integration, you build abstraction layer
 
 **AI-Generated (Day 1-2):**
 - Integrate MiniSearch library
@@ -178,8 +168,6 @@
 ---
 
 ### Phase 5: AI Infrastructure Setup
-**Duration**: 2-3 days  
-**Ownership**: Split - AI generates boilerplate, you implement minimal test
 
 **AI-Generated (Day 1-2):**
 - Set up Anthropic SDK and API client
@@ -213,8 +201,6 @@
 ---
 
 ### Phase 6: AI Prompt Strategy System (YOUR CODE)
-**Duration**: 4-5 days  
-**Ownership**: 100% manually coded by you
 
 **Scope:**
 - Design PromptStrategy base class with template method pattern
@@ -249,8 +235,6 @@
 ---
 
 ### Phase 7: Automated Narrative Generation
-**Duration**: 3-4 days  
-**Ownership**: Split - AI generates scheduler, you build state machine
 
 **AI-Generated (Day 1-2):**
 - Integrate node-cron for scheduled tasks
@@ -286,8 +270,6 @@
 ---
 
 ### Phase 8: Polish and Production Features
-**Duration**: 3-4 days  
-**Ownership**: Mostly AI-generated with your testing
 
 **AI-Generated:**
 - Implement auto-save (debounced, saves every 30 seconds or on blur)
@@ -315,8 +297,6 @@
 ---
 
 ### Phase 9: Distribution and Deployment
-**Duration**: 2-3 days  
-**Ownership**: 100% AI-generated
 
 **Scope:**
 - Configure electron-builder for production builds
@@ -350,7 +330,6 @@
 - Create embedding cache to avoid regeneration
 
 ### Phase 11: Multi-Device Sync (Future)
-**Ownership**: Mostly AI-generated
 
 **Scope:**
 - Implement Yjs CRDT for conflict-free merging
@@ -359,7 +338,6 @@
 - Add offline-first sync queue
 
 ### Phase 12: Collaboration Features (Future)
-**Ownership**: Mostly AI-generated
 
 **Scope:**
 - Shared notebooks with permissions
@@ -378,19 +356,6 @@
 4. **Generate tests**: Ask for unit tests using Jest where appropriate
 5. **Review thoroughly**: Read all AI-generated code before proceeding
 
-### For Your Code
-1. **Start with interfaces**: Define types/interfaces first, implement second
-2. **Write tests as you go**: Don't save testing for later
-3. **Iterate in small chunks**: Get one filter working before building the next
-4. **Use TypeScript features**: Lean into type safety to catch errors early
-5. **Ask questions**: If a pattern confuses you, ask Claude to explain it
-
-### Communication Between Phases
-- Each phase should output clear artifacts (files, documentation, test results)
-- Later phases consume earlier artifacts through well-defined interfaces
-- When you code a phase, document any assumptions for future phases
-- Keep a running "learnings" document with JavaScript gotchas you discover
-
 ---
 
 ## Success Metrics
@@ -405,36 +370,6 @@
 - [ ] Multi-tier summarization (daily → weekly → monthly) works
 - [ ] App packages and installs on macOS/Windows
 
-### Learning Milestones (Your JavaScript Proficiency)
-- [ ] Comfortable reading and writing ES6+ syntax
-- [ ] Understand async/await and Promise patterns
-- [ ] Can implement class hierarchies and interfaces
-- [ ] Can work with third-party npm libraries
-- [ ] Understand Electron's process model and IPC
-- [ ] Can debug JavaScript code effectively
-- [ ] Comfortable with TypeScript type system
-
----
-
-## Timeline Estimate
-
-**Aggressive (3-4 weeks full-time):**
-- Week 1: Phases 0-3 (setup through filter system)
-- Week 2: Phases 4-5 (search and AI infrastructure)
-- Week 3: Phases 6-7 (prompts and automated narratives)
-- Week 4: Phases 8-9 (polish and distribution)
-
-**Realistic (6-8 weeks part-time):**
-- Weeks 1-2: Phases 0-3
-- Weeks 3-4: Phases 4-5
-- Weeks 5-6: Phases 6-7
-- Weeks 7-8: Phases 8-9
-
-**Learning-Focused (10-12 weeks):**
-- Extra time for JavaScript experimentation
-- Deeper dives into concepts that interest you
-- Building additional features beyond the plan
-
 ---
 
 ## Risk Management
@@ -444,11 +379,6 @@
 - **Electron app size too large**: Mitigation: lazy load modules, exclude unnecessary dependencies
 - **Performance degrades with many notes**: Mitigation: implement pagination, virtual scrolling
 - **Prompt strategies don't produce quality narratives**: Mitigation: build feedback mechanism, iterate prompts
-
-### Learning Risks
-- **JavaScript ecosystem overwhelm**: Mitigation: stick to chosen stack, avoid framework hopping
-- **Getting stuck on AI-generated code**: Mitigation: ask Claude to explain before moving on
-- **Scope creep**: Mitigation: treat optional phases as truly optional, ship MVP first
 
 ---
 
