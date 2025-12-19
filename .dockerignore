@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+out/
+.vite/
+dist/
+
+# Development
+.git/
+.github/
+.vscode/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# User data
+notes/
+
+# Editor config
+.idea/
+*.swp
+*.swo
+*~
+
+# Test coverage
+coverage/
+
+# Environment files
+.env
+.env.local
