@@ -15,23 +15,45 @@ if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then
 fi
 
 # 1. Install Beads (bd) CLI tool for issue tracking
-if ! command -v bd &> /dev/null; then
+# First check if bd binary exists anywhere
+bd_binary=""
+for bd_path in "/root/.local/bin/bd" "$HOME/go/bin/bd" "/root/go/bin/bd"; do
+  if [ -f "$bd_path" ] || [ -L "$bd_path" ]; then
+    bd_binary="$bd_path"
+    break
+  fi
+done
+
+if [ -z "$bd_binary" ]; then
   log "Installing Beads (bd) CLI tool..."
+  # Install beads via the official installer (ignore errors as we verify below)
+  curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash 2>&1 | tail -5 || true
 
-  # Install beads via the official installer
-  curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash 2>&1 | tail -5
+  # Find where bd was installed
+  for bd_path in "$HOME/go/bin/bd" "/root/go/bin/bd"; do
+    if [ -f "$bd_path" ]; then
+      bd_binary="$bd_path"
+      break
+    fi
+  done
+fi
 
-  # Add common beads installation paths to PATH
-  export PATH="$HOME/.local/bin:$HOME/go/bin:/root/go/bin:$PATH"
+# Ensure bd is accessible via /root/.local/bin symlink
+if [ -n "$bd_binary" ]; then
+  if [ ! -L /root/.local/bin/bd ] && [ "$bd_binary" != "/root/.local/bin/bd" ]; then
+    log "Creating symlink /root/.local/bin/bd -> $bd_binary"
+    mkdir -p /root/.local/bin
+    ln -sf "$bd_binary" /root/.local/bin/bd
+  fi
 
-  # Verify installation
+  # Verify bd is now accessible
   if command -v bd &> /dev/null; then
-    log "Beads installed successfully ($(bd --version 2>/dev/null || echo 'version unknown'))"
+    log "Beads available: $(bd --version 2>/dev/null || echo 'version unknown')"
   else
-    log "Warning: Beads installation completed but 'bd' command not found in PATH"
+    log "Warning: bd binary exists at $bd_binary but not in PATH"
   fi
 else
-  log "Beads already installed ($(bd --version 2>/dev/null || echo 'version unknown'))"
+  log "Warning: Could not install or find bd binary"
 fi
 
 # 2. Install npm dependencies
@@ -47,52 +69,13 @@ if [ -f "package.json" ]; then
 fi
 
 # 3. Set up persistent environment variables for the session
-if [ -n "$CLAUDE_ENV_FILE" ]; then
+if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   cat >> "$CLAUDE_ENV_FILE" << 'EOF'
 export NODE_ENV=development
-export PATH="$HOME/.local/bin:$HOME/go/bin:/root/go/bin:$PATH"
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONUNBUFFERED=1
-export BASH_ENV="$HOME/.local/bin/env"
 EOF
   log "Environment variables persisted to CLAUDE_ENV_FILE"
-else
-  # Fallback: update ~/.local/bin/env and set BASH_ENV
-  log "CLAUDE_ENV_FILE not available, using ~/.local/bin/env instead"
-
-  # Update ~/.local/bin/env to include go/bin paths
-  if ! grep -q "# Add Go bin directories for Beads" ~/.local/bin/env 2>/dev/null; then
-    cat >> ~/.local/bin/env << 'EOF'
-
-# Add Go bin directories for Beads (bd) command
-case ":${PATH}:" in
-    *:"$HOME/go/bin":*)
-        ;;
-    *)
-        export PATH="$HOME/go/bin:$PATH"
-        ;;
-esac
-
-case ":${PATH}:" in
-    */root/go/bin:*)
-        ;;
-    *)
-        export PATH="/root/go/bin:$PATH"
-        ;;
-esac
-EOF
-    log "Go bin paths added to ~/.local/bin/env"
-  fi
-
-  # Set BASH_ENV to ensure non-interactive shells source the env file
-  if ! grep -q "export BASH_ENV" ~/.profile 2>/dev/null; then
-    cat >> ~/.profile << 'EOF'
-
-# Claude Code - Set BASH_ENV for non-interactive shells
-export BASH_ENV="$HOME/.local/bin/env"
-EOF
-    log "BASH_ENV added to ~/.profile"
-  fi
 fi
 
 # 4. Display context information for Claude

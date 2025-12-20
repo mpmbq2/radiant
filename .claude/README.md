@@ -63,14 +63,10 @@ CLAUDE_CODE_REMOTE=true bash .claude/hooks/session-start.sh
 The hook sets up persistent environment variables for the session:
 
 - `NODE_ENV=development` - Sets Node.js environment to development
-- `PATH` - Adds beads installation directories (`$HOME/go/bin`, `/root/go/bin`) to PATH
-- `BASH_ENV` - Points to `~/.local/bin/env` to ensure PATH is available in non-interactive shells
 - `PYTHONDONTWRITEBYTECODE=1` - Prevents Python bytecode generation
 - `PYTHONUNBUFFERED=1` - Enables unbuffered Python output
 
-**PATH Persistence:** The hook uses two mechanisms to ensure the `bd` command is available:
-1. Updates `~/.local/bin/env` with Go bin paths (sourced by `.profile`)
-2. Sets `BASH_ENV=$HOME/.local/bin/env` so non-interactive shells also get the correct PATH
+**Making `bd` Available:** The hook ensures the `bd` command is available in Claude Code by creating a symlink from `/root/.local/bin/bd` (which is already in PATH) to the installed `bd` binary (typically in `/root/go/bin/bd`). This approach works reliably for both interactive and non-interactive shells without requiring shell configuration files.
 
 ### Output
 
@@ -104,10 +100,10 @@ When the hook runs successfully, you'll see output like:
 
 **If `bd` command is not found after installation:**
 - Verify `bd` binary exists: `ls -la ~/go/bin/bd /root/go/bin/bd`
-- Check PATH in login shell: `bash --login -c 'echo $PATH'`
-- Ensure `~/.local/bin/env` contains Go bin paths
-- Ensure `~/.profile` exports `BASH_ENV="$HOME/.local/bin/env"`
-- Restart your Claude Code session to pick up the new environment variables
+- Check if symlink was created: `ls -la /root/.local/bin/bd`
+- Manually create symlink if needed: `ln -sf /root/go/bin/bd /root/.local/bin/bd`
+- Verify `/root/.local/bin` is in PATH: `echo $PATH`
+- Test the command: `bd --version`
 
 **If npm install fails:**
 - Check that Node.js is available
