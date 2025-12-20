@@ -1,5 +1,5 @@
 import { createStore } from 'zustand/vanilla';
-import type { NoteWithContent } from '../../database/schema';
+import type { NoteWithContent } from '../../types';
 
 interface NotesState {
   // Data

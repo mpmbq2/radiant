@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { CreateNoteInput, UpdateNoteInput, NoteWithContent } from './database/schema';
+import type { CreateNoteInput, UpdateNoteInput, NoteWithContent } from './types';
 
 // Expose protected methods that allow the renderer process to use
 // ipcRenderer without exposing the entire object

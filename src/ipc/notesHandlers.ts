@@ -1,97 +1,83 @@
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { notesService } from '../services/notesService';
 import { tagsRepository } from '../database/tagsRepository';
-import { CreateNoteInput, UpdateNoteInput, NoteWithContent } from '../database/schema';
+import type { CreateNoteInput, UpdateNoteInput, NoteWithContent } from '../types';
 
-export function registerNotesHandlers(): void {
-  // Create note
-  ipcMain.handle(
-    'notes:create',
-    async (event: IpcMainInvokeEvent, input: CreateNoteInput): Promise<NoteWithContent> => {
-      try {
-        return await notesService.createNote(input);
-      } catch (error) {
-        console.error('Error creating note:', error);
-        throw error;
-      }
-    }
-  );
-
-  // Get note by ID
-  ipcMain.handle(
-    'notes:getById',
-    async (event: IpcMainInvokeEvent, noteId: string): Promise<NoteWithContent | null> => {
-      try {
-        return await notesService.getNoteById(noteId);
-      } catch (error) {
-        console.error('Error getting note:', error);
-        throw error;
-      }
-    }
-  );
-
-  // Get all notes
-  ipcMain.handle(
-    'notes:getAll',
-    async (event: IpcMainInvokeEvent): Promise<NoteWithContent[]> => {
-      try {
-        return await notesService.getAllNotes();
-      } catch (error) {
-        console.error('Error getting all notes:', error);
-        throw error;
-      }
-    }
-  );
-
-  // Update note
-  ipcMain.handle(
-    'notes:update',
-    async (event: IpcMainInvokeEvent, input: UpdateNoteInput): Promise<NoteWithContent | null> => {
-      try {
-        return await notesService.updateNote(input);
-      } catch (error) {
-        console.error('Error updating note:', error);
-        throw error;
-      }
-    }
-  );
-
-  // Delete note
-  ipcMain.handle(
-    'notes:delete',
-    async (event: IpcMainInvokeEvent, noteId: string): Promise<void> => {
-      try {
-        await notesService.deleteNote(noteId);
-      } catch (error) {
-        console.error('Error deleting note:', error);
-        throw error;
-      }
-    }
-  );
-
-  // Search notes
-  ipcMain.handle(
-    'notes:search',
-    async (event: IpcMainInvokeEvent, query: string): Promise<NoteWithContent[]> => {
-      try {
-        return await notesService.searchNotes(query);
-      } catch (error) {
-        console.error('Error searching notes:', error);
-        throw error;
-      }
-    }
-  );
-
-  // Get all tags
-  ipcMain.handle('notes:getAllTags', async (event: IpcMainInvokeEvent): Promise<string[]> => {
+/**
+ * Generic wrapper for IPC handlers that provides consistent error handling.
+ * Eliminates the need for repetitive try-catch-console.error-throw patterns.
+ *
+ * @param channel - The IPC channel name
+ * @param errorContext - Descriptive context for error logging (e.g., "creating note")
+ * @param handler - The actual handler function that processes the request
+ */
+function createHandler<TArgs extends any[], TResult>(
+  channel: string,
+  errorContext: string,
+  handler: (...args: TArgs) => Promise<TResult>
+): void {
+  ipcMain.handle(channel, async (_event: IpcMainInvokeEvent, ...args: any[]): Promise<TResult> => {
     try {
-      const tags = tagsRepository.getAllTags();
-      return tags.map((t) => t.name);
+      return await handler(...(args as TArgs));
     } catch (error) {
-      console.error('Error getting tags:', error);
+      console.error(`Error ${errorContext}:`, error);
       throw error;
     }
   });
+}
+
+export function registerNotesHandlers(): void {
+  // Create note
+  createHandler(
+    'notes:create',
+    'creating note',
+    async (input: CreateNoteInput) => notesService.createNote(input)
+  );
+
+  // Get note by ID
+  createHandler(
+    'notes:getById',
+    'getting note',
+    async (noteId: string) => notesService.getNoteById(noteId)
+  );
+
+  // Get all notes
+  createHandler(
+    'notes:getAll',
+    'getting all notes',
+    async () => notesService.getAllNotes()
+  );
+
+  // Update note
+  createHandler(
+    'notes:update',
+    'updating note',
+    async (input: UpdateNoteInput) => notesService.updateNote(input)
+  );
+
+  // Delete note
+  createHandler(
+    'notes:delete',
+    'deleting note',
+    async (noteId: string) => notesService.deleteNote(noteId)
+  );
+
+  // Search notes
+  createHandler(
+    'notes:search',
+    'searching notes',
+    async (query: string) => notesService.searchNotes(query)
+  );
+
+  // Get all tags
+  createHandler(
+    'notes:getAllTags',
+    'getting tags',
+    async () => {
+      const tags = tagsRepository.getAllTags();
+      return tags.map((t) => t.name);
+    }
+  );
 
   console.log('Notes IPC handlers registered');
 }

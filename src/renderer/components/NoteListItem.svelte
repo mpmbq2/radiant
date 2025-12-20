@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NoteWithContent } from '../../database/schema';
+  import type { NoteWithContent } from '../../types';
 
   export let note: NoteWithContent;
   export let isSelected: boolean = false;

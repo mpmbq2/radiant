@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { notesRepository } from '../database/notesRepository';
 import { tagsRepository } from '../database/tagsRepository';
 import { fileManager } from '../storage/fileManager';
-import { NoteWithContent, CreateNoteInput, UpdateNoteInput } from '../database/schema';
+import type { Note, NoteWithContent, CreateNoteInput, UpdateNoteInput } from '../types';
 import { createLogger } from '../utils/logger';
 import { validateNoteTitle, validateNoteContent, validateTags } from '../utils/validation';
 
@@ -85,26 +85,7 @@ export class NotesService {
    */
   async getAllNotes(): Promise<NoteWithContent[]> {
     const notes = notesRepository.getAllNotes();
-
-    return notes.map((note) => {
-      try {
-        const { content } = fileManager.readNote(note.file_path);
-        const tags = tagsRepository.getTagsForNote(note.id);
-
-        return {
-          ...note,
-          content,
-          tags,
-        };
-      } catch (error) {
-        console.error(`Error reading note ${note.id}:`, error);
-        return {
-          ...note,
-          content: '',
-          tags: [],
-        };
-      }
-    });
+    return notes.map((note) => this.enrichNoteWithContent(note));
   }
 
   /**
@@ -180,26 +161,30 @@ export class NotesService {
    */
   async searchNotes(query: string): Promise<NoteWithContent[]> {
     const notes = notesRepository.searchNotesByTitle(query);
+    return notes.map((note) => this.enrichNoteWithContent(note));
+  }
 
-    return notes.map((note) => {
-      try {
-        const { content } = fileManager.readNote(note.file_path);
-        const tags = tagsRepository.getTagsForNote(note.id);
+  /**
+   * Helper: Enrich a note with content and tags from file system
+   */
+  private enrichNoteWithContent(note: Note): NoteWithContent {
+    try {
+      const { content } = fileManager.readNote(note.file_path);
+      const tags = tagsRepository.getTagsForNote(note.id);
 
-        return {
-          ...note,
-          content,
-          tags,
-        };
-      } catch (error) {
-        console.error(`Error reading note ${note.id}:`, error);
-        return {
-          ...note,
-          content: '',
-          tags: [],
-        };
-      }
-    });
+      return {
+        ...note,
+        content,
+        tags,
+      };
+    } catch (error) {
+      console.error(`Error reading note ${note.id}:`, error);
+      return {
+        ...note,
+        content: '',
+        tags: [],
+      };
+    }
   }
 
   /**

@@ -2,13 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { CONFIG } from '../config';
-
-export interface NoteFrontmatter {
-  title: string;
-  tags: string[];
-  created_at: number;
-  modified_at: number;
-}
+import type { NoteFrontmatter } from '../types';
 
 export class FileManager {
   private notesDir: string;

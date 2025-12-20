@@ -1,4 +1,4 @@
-import { Note, NoteWithContent } from '../database/schema';
+import type { Note, NoteWithContent } from '../types';
 
 /**
  * Serializable filter configuration
