@@ -23,6 +23,29 @@ interface NotesState {
   toggleSidebar: () => void;
 }
 
+/**
+ * Helper function to wrap async operations with consistent loading state management
+ * Ensures isLoading is always reset even when errors occur
+ */
+const withLoading = async <T>(
+  set: (state: Partial<NotesState> | ((state: NotesState) => Partial<NotesState>)) => void,
+  operation: () => Promise<T>,
+  options: { rethrow?: boolean } = {}
+): Promise<T | void> => {
+  set({ isLoading: true, error: null });
+  try {
+    return await operation();
+  } catch (error) {
+    console.error('Operation failed:', error);
+    set({ error: (error as Error).message });
+    if (options.rethrow) {
+      throw error;
+    }
+  } finally {
+    set({ isLoading: false });
+  }
+};
+
 export const notesStore = createStore<NotesState>((set, get) => ({
   // Initial state
   notes: [],
@@ -35,91 +58,78 @@ export const notesStore = createStore<NotesState>((set, get) => ({
 
   // Load all notes
   loadNotes: async () => {
-    set({ isLoading: true, error: null });
-    try {
+    await withLoading(set, async () => {
       const notes = await window.electronAPI.notes.getAll();
-      set({ notes, isLoading: false });
-    } catch (error) {
-      console.error('Failed to load notes:', error);
-      set({ error: (error as Error).message, isLoading: false });
-    }
+      set({ notes });
+    });
   },
 
   // Create new note
   createNote: async (title, content = '', tags = []) => {
-    set({ isLoading: true, error: null });
-    try {
-      const newNote = await window.electronAPI.notes.create({
-        title,
-        content,
-        tags,
-      });
-      set((state) => ({
-        notes: [newNote, ...state.notes],
-        currentNoteId: newNote.id,
-        currentNote: newNote,
-        isLoading: false,
-      }));
-    } catch (error) {
-      console.error('Failed to create note:', error);
-      set({ error: (error as Error).message, isLoading: false });
-      throw error;
-    }
+    await withLoading(
+      set,
+      async () => {
+        const newNote = await window.electronAPI.notes.create({
+          title,
+          content,
+          tags,
+        });
+        set((state) => ({
+          notes: [newNote, ...state.notes],
+          currentNoteId: newNote.id,
+          currentNote: newNote,
+        }));
+      },
+      { rethrow: true }
+    );
   },
 
   // Select and load a note
   selectNote: async (noteId) => {
-    set({ isLoading: true, error: null });
-    try {
+    await withLoading(set, async () => {
       const note = await window.electronAPI.notes.getById(noteId);
       set({
         currentNoteId: noteId,
         currentNote: note,
-        isLoading: false,
       });
-    } catch (error) {
-      console.error('Failed to load note:', error);
-      set({ error: (error as Error).message, isLoading: false });
-    }
+    });
   },
 
   // Update note
   updateNote: async (noteId, updates) => {
-    try {
-      const updatedNote = await window.electronAPI.notes.update({
-        id: noteId,
-        ...updates,
-      });
+    await withLoading(
+      set,
+      async () => {
+        const updatedNote = await window.electronAPI.notes.update({
+          id: noteId,
+          ...updates,
+        });
 
-      if (updatedNote) {
-        set((state) => ({
-          notes: state.notes.map((n) => (n.id === noteId ? updatedNote : n)),
-          currentNote: state.currentNoteId === noteId ? updatedNote : state.currentNote,
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to update note:', error);
-      set({ error: (error as Error).message });
-      throw error;
-    }
+        if (updatedNote) {
+          set((state) => ({
+            notes: state.notes.map((n) => (n.id === noteId ? updatedNote : n)),
+            currentNote: state.currentNoteId === noteId ? updatedNote : state.currentNote,
+          }));
+        }
+      },
+      { rethrow: true }
+    );
   },
 
   // Delete note
   deleteNote: async (noteId) => {
-    set({ isLoading: true, error: null });
-    try {
-      await window.electronAPI.notes.delete(noteId);
-      set((state) => ({
-        notes: state.notes.filter((n) => n.id !== noteId),
-        currentNoteId: state.currentNoteId === noteId ? null : state.currentNoteId,
-        currentNote: state.currentNoteId === noteId ? null : state.currentNote,
-        isLoading: false,
-      }));
-    } catch (error) {
-      console.error('Failed to delete note:', error);
-      set({ error: (error as Error).message, isLoading: false });
-      throw error;
-    }
+    await withLoading(
+      set,
+      async () => {
+        await window.electronAPI.notes.delete(noteId);
+        set((state) => ({
+          notes: state.notes.filter((n) => n.id !== noteId),
+          currentNoteId: state.currentNoteId === noteId ? null : state.currentNoteId,
+          currentNote: state.currentNoteId === noteId ? null : state.currentNote,
+        }));
+      },
+      { rethrow: true }
+    );
   },
 
   // Set search query
