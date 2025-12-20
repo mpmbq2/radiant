@@ -1,23 +1,19 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
   import { notesStore } from '../stores/notesStore';
+  import { subscribeStore } from '../utils/useStore.svelte';
   import NoteListItem from './NoteListItem.svelte';
 
   const store = notesStore;
 
-  let notes = store.getState().notes;
-  let currentNoteId = store.getState().currentNoteId;
-  let searchQuery = store.getState().searchQuery;
+  let notes = $state(store.getState().notes);
+  let currentNoteId = $state(store.getState().currentNoteId);
+  let searchQuery = $state(store.getState().searchQuery);
 
-  // Subscribe to store changes
-  const unsubscribe = store.subscribe((state) => {
+  // Subscribe to store changes with automatic cleanup
+  subscribeStore(store, (state) => {
     notes = state.notes;
     currentNoteId = state.currentNoteId;
     searchQuery = state.searchQuery;
-  });
-
-  onDestroy(() => {
-    unsubscribe();
   });
 
   // Filter notes based on search query

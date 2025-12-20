@@ -1,22 +1,18 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
   import { notesStore } from '../stores/notesStore';
+  import { subscribeStore } from '../utils/useStore.svelte';
   import Editor from './Editor.svelte';
   import EmptyState from './EmptyState.svelte';
 
   const store = notesStore;
 
-  let currentNote = store.getState().currentNote;
-  let isLoading = store.getState().isLoading;
+  let currentNote = $state(store.getState().currentNote);
+  let isLoading = $state(store.getState().isLoading);
 
-  // Subscribe to store changes
-  const unsubscribe = store.subscribe((state) => {
+  // Subscribe to store changes with automatic cleanup
+  subscribeStore(store, (state) => {
     currentNote = state.currentNote;
     isLoading = state.isLoading;
-  });
-
-  onDestroy(() => {
-    unsubscribe();
   });
 
   let titleInput: HTMLInputElement;

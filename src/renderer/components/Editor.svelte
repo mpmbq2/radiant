@@ -5,6 +5,7 @@
   import Placeholder from '@tiptap/extension-placeholder';
   import Typography from '@tiptap/extension-typography';
   import { notesStore } from '../stores/notesStore';
+  import { subscribeStore } from '../utils/useStore.svelte';
   import EditorToolbar from './EditorToolbar.svelte';
 
   const store = notesStore;
@@ -13,10 +14,10 @@
   export let editor: Editor | null = null;
   let isSaving = false;
 
-  let currentNote = store.getState().currentNote;
+  let currentNote = $state(store.getState().currentNote);
 
-  // Subscribe to store changes
-  const unsubscribe = store.subscribe((state) => {
+  // Subscribe to store changes with automatic cleanup
+  subscribeStore(store, (state) => {
     currentNote = state.currentNote;
   });
 
@@ -66,7 +67,6 @@
   });
 
   onDestroy(() => {
-    unsubscribe();
     if (editor) {
       editor.destroy();
     }
