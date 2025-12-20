@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { NoteWithContent } from '../database/schema';
+  import type { NoteWithContent } from '../types';
 
   let notes: NoteWithContent[] = [];
   let selectedNote: NoteWithContent | null = null;

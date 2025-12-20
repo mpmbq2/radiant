@@ -2,26 +2,32 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { CONFIG } from '../config';
-
-export interface NoteFrontmatter {
-  title: string;
-  tags: string[];
-  created_at: number;
-  modified_at: number;
-}
+import type { NoteFrontmatter } from '../types';
 
 export class FileManager {
-  private notesDir: string;
+  private notesDir: string | null = null;
+  private customNotesDir?: string;
+  private initialized: boolean = false;
 
   constructor(notesDir?: string) {
-    this.notesDir = notesDir || CONFIG.NOTES_DIR;
-    this.ensureNotesDirectory();
+    this.customNotesDir = notesDir;
+  }
+
+  private getNotesDir(): string {
+    if (!this.notesDir) {
+      this.notesDir = this.customNotesDir || CONFIG.NOTES_DIR;
+    }
+    return this.notesDir;
   }
 
   private ensureNotesDirectory(): void {
-    if (!fs.existsSync(this.notesDir)) {
-      fs.mkdirSync(this.notesDir, { recursive: true });
-      console.log(`Created notes directory: ${this.notesDir}`);
+    if (!this.initialized) {
+      const dir = this.getNotesDir();
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log(`Created notes directory: ${dir}`);
+      }
+      this.initialized = true;
     }
   }
 
@@ -29,7 +35,8 @@ export class FileManager {
    * Generate a file path for a note
    */
   generateFilePath(noteId: string): string {
-    return path.join(this.notesDir, `${noteId}.md`);
+    this.ensureNotesDirectory();
+    return path.join(this.getNotesDir(), `${noteId}.md`);
   }
 
   /**
@@ -40,6 +47,7 @@ export class FileManager {
     content: string,
     frontmatter: NoteFrontmatter
   ): void {
+    this.ensureNotesDirectory();
     const fileContent = matter.stringify(content, frontmatter);
     fs.writeFileSync(filePath, fileContent, 'utf-8');
     console.log(`Note written to: ${filePath}`);
@@ -83,14 +91,17 @@ export class FileManager {
    * Get all note file paths
    */
   getAllNoteFiles(): string[] {
-    if (!fs.existsSync(this.notesDir)) {
+    this.ensureNotesDirectory();
+    const dir = this.getNotesDir();
+
+    if (!fs.existsSync(dir)) {
       return [];
     }
 
     return fs
-      .readdirSync(this.notesDir)
+      .readdirSync(dir)
       .filter((file) => file.endsWith('.md'))
-      .map((file) => path.join(this.notesDir, file));
+      .map((file) => path.join(dir, file));
   }
 }
 

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase } from './connection';
-import { Note, NoteWithContent, CreateNoteInput, UpdateNoteInput } from './schema';
+import type { Note, NoteWithContent, CreateNoteInput, UpdateNoteInput } from '../types';
 
 export class NotesRepository {
   /**

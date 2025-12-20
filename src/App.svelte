@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { notesStore } from './renderer/stores/notesStore';
   import { setupKeyboardShortcuts } from './renderer/utils/keyboardShortcuts';
+  import { subscribeStore } from './renderer/utils/useStore.svelte';
   import Sidebar from './renderer/components/Sidebar.svelte';
   import EditorView from './renderer/components/EditorView.svelte';
 
@@ -9,10 +10,10 @@
 
   let cleanupShortcuts: (() => void) | null = null;
 
-  let isSidebarCollapsed = store.getState().isSidebarCollapsed;
+  let isSidebarCollapsed = $state(store.getState().isSidebarCollapsed);
 
-  // Subscribe to store changes
-  const unsubscribeStore = store.subscribe((state) => {
+  // Subscribe to store changes with automatic cleanup
+  subscribeStore(store, (state) => {
     isSidebarCollapsed = state.isSidebarCollapsed;
   });
 
@@ -25,7 +26,6 @@
   });
 
   onDestroy(() => {
-    unsubscribeStore();
     if (cleanupShortcuts) {
       cleanupShortcuts();
     }

@@ -1,5 +1,5 @@
 import { getDatabase } from './connection';
-import { Tag } from './schema';
+import type { Tag } from '../types';
 
 export class TagsRepository {
   /**
