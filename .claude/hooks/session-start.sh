@@ -53,8 +53,46 @@ export NODE_ENV=development
 export PATH="$HOME/.local/bin:$HOME/go/bin:/root/go/bin:$PATH"
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONUNBUFFERED=1
+export BASH_ENV="$HOME/.local/bin/env"
 EOF
-  log "Environment variables persisted to session"
+  log "Environment variables persisted to CLAUDE_ENV_FILE"
+else
+  # Fallback: update ~/.local/bin/env and set BASH_ENV
+  log "CLAUDE_ENV_FILE not available, using ~/.local/bin/env instead"
+
+  # Update ~/.local/bin/env to include go/bin paths
+  if ! grep -q "# Add Go bin directories for Beads" ~/.local/bin/env 2>/dev/null; then
+    cat >> ~/.local/bin/env << 'EOF'
+
+# Add Go bin directories for Beads (bd) command
+case ":${PATH}:" in
+    *:"$HOME/go/bin":*)
+        ;;
+    *)
+        export PATH="$HOME/go/bin:$PATH"
+        ;;
+esac
+
+case ":${PATH}:" in
+    */root/go/bin:*)
+        ;;
+    *)
+        export PATH="/root/go/bin:$PATH"
+        ;;
+esac
+EOF
+    log "Go bin paths added to ~/.local/bin/env"
+  fi
+
+  # Set BASH_ENV to ensure non-interactive shells source the env file
+  if ! grep -q "export BASH_ENV" ~/.profile 2>/dev/null; then
+    cat >> ~/.profile << 'EOF'
+
+# Claude Code - Set BASH_ENV for non-interactive shells
+export BASH_ENV="$HOME/.local/bin/env"
+EOF
+    log "BASH_ENV added to ~/.profile"
+  fi
 fi
 
 # 4. Display context information for Claude

@@ -63,9 +63,14 @@ CLAUDE_CODE_REMOTE=true bash .claude/hooks/session-start.sh
 The hook sets up persistent environment variables for the session:
 
 - `NODE_ENV=development` - Sets Node.js environment to development
-- `PATH` - Adds beads installation directories to PATH
+- `PATH` - Adds beads installation directories (`$HOME/go/bin`, `/root/go/bin`) to PATH
+- `BASH_ENV` - Points to `~/.local/bin/env` to ensure PATH is available in non-interactive shells
 - `PYTHONDONTWRITEBYTECODE=1` - Prevents Python bytecode generation
 - `PYTHONUNBUFFERED=1` - Enables unbuffered Python output
+
+**PATH Persistence:** The hook uses two mechanisms to ensure the `bd` command is available:
+1. Updates `~/.local/bin/env` with Go bin paths (sourced by `.profile`)
+2. Sets `BASH_ENV=$HOME/.local/bin/env` so non-interactive shells also get the correct PATH
 
 ### Output
 
@@ -96,6 +101,13 @@ When the hook runs successfully, you'll see output like:
 - Check that Go is available in the environment
 - The script will attempt to install via GitHub releases or `go install`
 - Beads may be installed in `$HOME/go/bin` or `/root/go/bin`
+
+**If `bd` command is not found after installation:**
+- Verify `bd` binary exists: `ls -la ~/go/bin/bd /root/go/bin/bd`
+- Check PATH in login shell: `bash --login -c 'echo $PATH'`
+- Ensure `~/.local/bin/env` contains Go bin paths
+- Ensure `~/.profile` exports `BASH_ENV="$HOME/.local/bin/env"`
+- Restart your Claude Code session to pick up the new environment variables
 
 **If npm install fails:**
 - Check that Node.js is available
