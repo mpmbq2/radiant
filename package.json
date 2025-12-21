@@ -10,7 +10,11 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
-    "format": "prettier --write \"src/**/*.{ts,svelte,css,html}\""
+    "format": "prettier --write \"src/**/*.{ts,svelte,css,html}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": {

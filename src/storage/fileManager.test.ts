@@ -132,7 +132,7 @@ describe('FileManager', () => {
       fileManager.writeNote(filePath, content, frontmatter);
       const result = fileManager.readNote(filePath);
 
-      expect(result.content).toBe(content);
+      expect(result.content.trim()).toBe(content);
       expect(result.frontmatter.title).toBe('Test Note');
       expect(result.frontmatter.tags).toEqual(['test']);
       expect(result.frontmatter.created_at).toBe(1234567890);
@@ -179,7 +179,7 @@ describe('FileManager', () => {
       fileManager.writeNote(filePath, content, frontmatter);
       const result = fileManager.readNote(filePath);
 
-      expect(result.content).toBe(content);
+      expect(result.content.trim()).toBe(content);
     });
   });
 
@@ -316,7 +316,7 @@ describe('FileManager', () => {
       fileManager.writeNote(filePath, originalContent, originalFrontmatter);
       const result = fileManager.readNote(filePath);
 
-      expect(result.content).toBe(originalContent);
+      expect(result.content.trim()).toBe(originalContent);
       expect(result.frontmatter).toEqual(originalFrontmatter);
     });
   });

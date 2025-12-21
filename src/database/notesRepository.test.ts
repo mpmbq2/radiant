@@ -13,6 +13,7 @@ import {
   teardownTestDatabase,
   clearTestDatabase,
 } from './testHelpers';
+import { getDatabase } from './connection';
 
 describe('NotesRepository', () => {
   let repository: NotesRepository;
@@ -170,7 +171,8 @@ describe('NotesRepository', () => {
 
       const updated = repository.getNoteById(noteId);
       expect(updated?.modified_at).toBeGreaterThanOrEqual(beforeUpdate);
-      expect(updated?.modified_at).toBeGreaterThan(created.modified_at);
+      // modified_at should be at least as recent as created_at (may be same if update is very fast)
+      expect(updated?.modified_at).toBeGreaterThanOrEqual(created.modified_at);
     });
 
     it('should update multiple fields at once', () => {
@@ -209,7 +211,6 @@ describe('NotesRepository', () => {
       repository.deleteNote(noteId);
 
       // Access database directly to check deleted_at
-      const { getDatabase } = require('./connection');
       const db = getDatabase();
       const result = db
         .prepare('SELECT deleted_at FROM notes WHERE id = ?')
@@ -227,7 +228,6 @@ describe('NotesRepository', () => {
       repository.permanentlyDeleteNote(noteId);
 
       // Check that note is completely gone from database
-      const { getDatabase } = require('./connection');
       const db = getDatabase();
       const result = db.prepare('SELECT * FROM notes WHERE id = ?').get(noteId);
 
