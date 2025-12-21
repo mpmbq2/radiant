@@ -85,7 +85,11 @@
       <h2>Create Note</h2>
       <input type="text" bind:value={newTitle} placeholder="Title" />
       <textarea bind:value={newContent} placeholder="Content" rows="4" />
-      <input type="text" bind:value={newTags} placeholder="Tags (comma-separated)" />
+      <input
+        type="text"
+        bind:value={newTags}
+        placeholder="Tags (comma-separated)"
+      />
       <button on:click={createNote}>Create Note</button>
     </div>
 
@@ -111,7 +115,10 @@
   .container {
     display: flex;
     height: 100vh;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 
   .sidebar {

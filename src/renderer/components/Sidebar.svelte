@@ -14,7 +14,11 @@
 <div class="sidebar">
   <div class="sidebar-header">
     <h1 class="app-title">Radiant</h1>
-    <button class="new-note-button" on:click={handleNewNote} title="New Note (Cmd+N)">
+    <button
+      class="new-note-button"
+      on:click={handleNewNote}
+      title="New Note (Cmd+N)"
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="20"

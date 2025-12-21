@@ -222,7 +222,9 @@
     border-radius: 4px;
     font-size: 0.9rem;
     cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s;
     color: #374151;
   }
 

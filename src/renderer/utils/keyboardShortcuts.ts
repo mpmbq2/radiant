@@ -13,16 +13,35 @@ export interface ShortcutHandler {
 }
 
 export function createShortcutHandler(shortcuts: ShortcutHandler[]) {
+  const isMac = process.platform === 'darwin';
+
   return (event: KeyboardEvent) => {
     for (const shortcut of shortcuts) {
-      const isShiftMatch = shortcut.modifiers.shift ? event.shiftKey : !event.shiftKey;
+      const isShiftMatch = shortcut.modifiers.shift
+        ? event.shiftKey
+        : !event.shiftKey;
       const isAltMatch = shortcut.modifiers.alt ? event.altKey : !event.altKey;
       const isKeyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
 
-      // Check if either Ctrl (Windows/Linux) or Meta (Mac) matches
-      const isModifierMatch =
-        (shortcut.modifiers.ctrl && (event.ctrlKey || event.metaKey)) ||
-        (shortcut.modifiers.meta && (event.metaKey || event.ctrlKey));
+      // Platform-specific modifier detection
+      // On macOS: Ctrl modifier should check Meta key (Cmd)
+      // On Windows/Linux: Ctrl modifier should check Ctrl key
+      let isCtrlMatch = false;
+      if (shortcut.modifiers.ctrl) {
+        isCtrlMatch = isMac ? event.metaKey : event.ctrlKey;
+      } else {
+        isCtrlMatch = isMac ? !event.metaKey : !event.ctrlKey;
+      }
+
+      // Meta modifier should only check Meta key on macOS (ignore on Windows/Linux)
+      let isMetaMatch = false;
+      if (shortcut.modifiers.meta) {
+        isMetaMatch = isMac && event.metaKey;
+      } else {
+        isMetaMatch = !event.metaKey;
+      }
+
+      const isModifierMatch = isCtrlMatch && isMetaMatch;
 
       if (isKeyMatch && isModifierMatch && isShiftMatch && isAltMatch) {
         event.preventDefault();
@@ -61,7 +80,9 @@ export function setupKeyboardShortcuts(): () => void {
       modifiers: { ctrl: true },
       description: 'Focus search',
       handler: () => {
-        const searchInput = document.querySelector('.search-input') as HTMLInputElement;
+        const searchInput = document.querySelector(
+          '.search-input'
+        ) as HTMLInputElement;
         searchInput?.focus();
       },
     },

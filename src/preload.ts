@@ -1,5 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { CreateNoteInput, UpdateNoteInput, NoteWithContent } from './types';
+import type {
+  CreateNoteInput,
+  UpdateNoteInput,
+  NoteWithContent,
+} from './types';
 
 // Expose protected methods that allow the renderer process to use
 // ipcRenderer without exposing the entire object
@@ -12,12 +16,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getById: (noteId: string): Promise<NoteWithContent | null> =>
       ipcRenderer.invoke('notes:getById', noteId),
 
-    getAll: (): Promise<NoteWithContent[]> => ipcRenderer.invoke('notes:getAll'),
+    getAll: (): Promise<NoteWithContent[]> =>
+      ipcRenderer.invoke('notes:getAll'),
 
     update: (input: UpdateNoteInput): Promise<NoteWithContent | null> =>
       ipcRenderer.invoke('notes:update', input),
 
-    delete: (noteId: string): Promise<void> => ipcRenderer.invoke('notes:delete', noteId),
+    delete: (noteId: string): Promise<void> =>
+      ipcRenderer.invoke('notes:delete', noteId),
 
     search: (query: string): Promise<NoteWithContent[]> =>
       ipcRenderer.invoke('notes:search', query),

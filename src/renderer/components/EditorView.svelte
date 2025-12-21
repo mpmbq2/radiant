@@ -85,7 +85,11 @@
       </div>
 
       <div class="header-actions">
-        <button class="delete-button" on:click={handleDeleteNote} title="Delete Note">
+        <button
+          class="delete-button"
+          on:click={handleDeleteNote}
+          title="Delete Note"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"
@@ -209,7 +213,9 @@
     color: #6b7280;
     border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.15s, color 0.15s;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
   }
 
   .delete-button:hover {

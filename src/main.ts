@@ -4,6 +4,9 @@ import started from 'electron-squirrel-startup';
 import { initializeDatabase, closeDatabase } from './database/connection';
 import { runMigrations } from './database/migrations';
 import { registerNotesHandlers } from './ipc/notesHandlers';
+import { createLogger } from './utils/logger';
+
+const logger = createLogger('Main');
 
 // Declare Electron Forge constants
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
@@ -15,17 +18,6 @@ if (started) {
 }
 
 let mainWindow: BrowserWindow | null = null;
-
-// Set up IPC handlers
-ipcMain.on('toMain', (event, data) => {
-  console.log('Received from renderer:', data);
-
-  // Send response back to renderer
-  event.sender.send('fromMain', {
-    response: 'Message received!',
-    timestamp: Date.now(),
-  });
-});
 
 const createWindow = (): void => {
   // Create the browser window.
@@ -65,7 +57,7 @@ app.on('ready', () => {
     registerNotesHandlers();
     createWindow();
   } catch (error) {
-    console.error('Failed to initialize application:', error);
+    logger.error('Failed to initialize application:', error as Error);
     app.quit();
   }
 });
