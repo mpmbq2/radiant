@@ -1,10 +1,14 @@
 <script lang="ts">
   import type { Editor } from '@tiptap/core';
 
-  export let editor: Editor | null;
+  interface Props {
+    editor: Editor | null;
+  }
 
-  $: canUndo = editor?.can().undo() ?? false;
-  $: canRedo = editor?.can().redo() ?? false;
+  let { editor }: Props = $props();
+
+  let canUndo = $derived(editor?.can().undo() ?? false);
+  let canRedo = $derived(editor?.can().redo() ?? false);
 
   function toggleBold() {
     editor?.chain().focus().toggleBold().run();
@@ -50,17 +54,17 @@
     editor?.chain().focus().redo().run();
   }
 
-  $: isBold = editor?.isActive('bold') ?? false;
-  $: isItalic = editor?.isActive('italic') ?? false;
-  $: isStrike = editor?.isActive('strike') ?? false;
-  $: isCode = editor?.isActive('code') ?? false;
-  $: isH1 = editor?.isActive('heading', { level: 1 }) ?? false;
-  $: isH2 = editor?.isActive('heading', { level: 2 }) ?? false;
-  $: isH3 = editor?.isActive('heading', { level: 3 }) ?? false;
-  $: isBulletList = editor?.isActive('bulletList') ?? false;
-  $: isOrderedList = editor?.isActive('orderedList') ?? false;
-  $: isBlockquote = editor?.isActive('blockquote') ?? false;
-  $: isCodeBlock = editor?.isActive('codeBlock') ?? false;
+  let isBold = $derived(editor?.isActive('bold') ?? false);
+  let isItalic = $derived(editor?.isActive('italic') ?? false);
+  let isStrike = $derived(editor?.isActive('strike') ?? false);
+  let isCode = $derived(editor?.isActive('code') ?? false);
+  let isH1 = $derived(editor?.isActive('heading', { level: 1 }) ?? false);
+  let isH2 = $derived(editor?.isActive('heading', { level: 2 }) ?? false);
+  let isH3 = $derived(editor?.isActive('heading', { level: 3 }) ?? false);
+  let isBulletList = $derived(editor?.isActive('bulletList') ?? false);
+  let isOrderedList = $derived(editor?.isActive('orderedList') ?? false);
+  let isBlockquote = $derived(editor?.isActive('blockquote') ?? false);
+  let isCodeBlock = $derived(editor?.isActive('codeBlock') ?? false);
 </script>
 
 <div class="toolbar">
@@ -193,8 +197,8 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.75rem 1rem;
-    background-color: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
+    background-color: var(--color-mantle);
+    border-bottom: 1px solid var(--color-border);
     flex-wrap: wrap;
   }
 
@@ -206,7 +210,7 @@
   .toolbar-divider {
     width: 1px;
     height: 24px;
-    background-color: #d1d5db;
+    background-color: var(--color-border);
     margin: 0 0.5rem;
   }
 
@@ -225,17 +229,17 @@
     transition:
       background-color 0.15s,
       border-color 0.15s;
-    color: #374151;
+    color: var(--color-text);
   }
 
   .toolbar-button:hover:not(:disabled) {
-    background-color: #e5e7eb;
+    background-color: var(--color-hover);
   }
 
   .toolbar-button.active {
-    background-color: #dbeafe;
-    border-color: #3b82f6;
-    color: #1e40af;
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-base);
   }
 
   .toolbar-button:disabled {
@@ -244,6 +248,6 @@
   }
 
   .toolbar-button:active:not(:disabled) {
-    background-color: #d1d5db;
+    background-color: var(--color-surface);
   }
 </style>

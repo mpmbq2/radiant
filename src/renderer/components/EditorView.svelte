@@ -123,7 +123,7 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background-color: #ffffff;
+    background-color: var(--color-base);
   }
 
   .loading {
@@ -132,14 +132,14 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: #6b7280;
+    color: var(--color-subtext);
   }
 
   .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid #e5e7eb;
-    border-top-color: #3b82f6;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin-bottom: 1rem;
@@ -156,8 +156,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 1.5rem 2rem 1rem 2rem;
-    border-bottom: 1px solid #e5e7eb;
-    background-color: #ffffff;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-base);
   }
 
   .title-section {
@@ -168,7 +168,7 @@
   .note-title {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--color-text);
     margin: 0;
     cursor: pointer;
     padding: 0.25rem 0.5rem;
@@ -181,19 +181,19 @@
   }
 
   .note-title:hover {
-    background-color: #f3f4f6;
+    background-color: var(--color-hover);
   }
 
   .title-input {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #111827;
-    border: 2px solid #3b82f6;
+    color: var(--color-text);
+    border: 2px solid var(--color-accent);
     border-radius: 4px;
     padding: 0.25rem 0.5rem;
     outline: none;
     width: 100%;
-    background-color: #ffffff;
+    background-color: var(--color-base);
   }
 
   .header-actions {
@@ -210,7 +210,7 @@
     height: 36px;
     border: none;
     background-color: transparent;
-    color: #6b7280;
+    color: var(--color-subtext);
     border-radius: 6px;
     cursor: pointer;
     transition:
@@ -219,7 +219,8 @@
   }
 
   .delete-button:hover {
-    background-color: #fee2e2;
-    color: #dc2626;
+    background-color: var(--color-error);
+    color: var(--color-base);
+    opacity: 0.9;
   }
 </style>

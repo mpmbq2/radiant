@@ -1,8 +1,15 @@
 <script lang="ts">
-  export let message: string = 'No note selected';
-  export let description: string =
-    'Select a note from the list or create a new one';
-  export let showIcon: boolean = true;
+  interface Props {
+    message?: string;
+    description?: string;
+    showIcon?: boolean;
+  }
+
+  let {
+    message = 'No note selected',
+    description = 'Select a note from the list or create a new one',
+    showIcon = true,
+  }: Props = $props();
 </script>
 
 <div class="empty-state">
@@ -42,7 +49,7 @@
     height: 100%;
     padding: 2rem;
     text-align: center;
-    color: #6b7280;
+    color: var(--color-subtext);
   }
 
   .icon {
@@ -54,11 +61,11 @@
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: #374151;
+    color: var(--color-text);
   }
 
   .description {
     font-size: 0.95rem;
-    color: #6b7280;
+    color: var(--color-subtext);
   }
 </style>

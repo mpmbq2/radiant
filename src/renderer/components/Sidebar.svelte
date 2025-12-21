@@ -2,6 +2,7 @@
   import { notesStore } from '../stores/notesStore';
   import SearchBar from './SearchBar.svelte';
   import NoteList from './NoteList.svelte';
+  import ThemeSelector from './ThemeSelector.svelte';
 
   const store = notesStore;
 
@@ -41,6 +42,8 @@
   <div class="sidebar-content">
     <NoteList />
   </div>
+
+  <ThemeSelector />
 </div>
 
 <style>
@@ -49,8 +52,8 @@
     flex-direction: column;
     width: 280px;
     height: 100vh;
-    background-color: #ffffff;
-    border-right: 1px solid #e5e7eb;
+    background-color: var(--color-base);
+    border-right: 1px solid var(--color-border);
   }
 
   .sidebar-header {
@@ -58,13 +61,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .app-title {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--color-text);
     margin: 0;
   }
 
@@ -75,19 +78,20 @@
     width: 36px;
     height: 36px;
     border: none;
-    background-color: #3b82f6;
-    color: white;
+    background-color: var(--color-accent);
+    color: var(--color-base);
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.15s;
   }
 
   .new-note-button:hover {
-    background-color: #2563eb;
+    background-color: var(--color-accent-secondary);
   }
 
   .new-note-button:active {
-    background-color: #1d4ed8;
+    background-color: var(--color-accent-secondary);
+    opacity: 0.8;
   }
 
   .sidebar-content {

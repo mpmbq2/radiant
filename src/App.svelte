@@ -3,6 +3,7 @@
   import { notesStore } from './renderer/stores/notesStore';
   import { setupKeyboardShortcuts } from './renderer/utils/keyboardShortcuts';
   import { subscribeStore } from './renderer/utils/useStore.svelte';
+  import ThemeProvider from './renderer/components/ThemeProvider.svelte';
   import Sidebar from './renderer/components/Sidebar.svelte';
   import EditorView from './renderer/components/EditorView.svelte';
 
@@ -32,12 +33,14 @@
   });
 </script>
 
-<main class="app" class:sidebar-collapsed={isSidebarCollapsed}>
-  {#if !isSidebarCollapsed}
-    <Sidebar />
-  {/if}
-  <EditorView />
-</main>
+<ThemeProvider>
+  <main class="app" class:sidebar-collapsed={isSidebarCollapsed}>
+    {#if !isSidebarCollapsed}
+      <Sidebar />
+    {/if}
+    <EditorView />
+  </main>
+</ThemeProvider>
 
 <style>
   :global(body) {

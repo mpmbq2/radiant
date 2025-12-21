@@ -12,7 +12,9 @@
   }
 
   // Subscribe to theme store state
-  let currentTheme = $state<CatppuccinFlavor>(themeStore.getState().currentTheme);
+  let currentTheme = $state<CatppuccinFlavor>(
+    themeStore.getState().currentTheme
+  );
   let isLoading = $state<boolean>(themeStore.getState().isLoading);
 
   // Subscribe to store updates
@@ -29,7 +31,12 @@
     const root = document.documentElement;
 
     // Remove all existing theme classes
-    root.classList.remove('theme-latte', 'theme-frappe', 'theme-macchiato', 'theme-mocha');
+    root.classList.remove(
+      'theme-latte',
+      'theme-frappe',
+      'theme-macchiato',
+      'theme-mocha'
+    );
 
     // Add the new theme class
     root.classList.add(`theme-${theme}`);
