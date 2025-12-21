@@ -46,7 +46,11 @@
     />
 
     {#if searchInput}
-      <button class="clear-button" on:click={clearSearch} aria-label="Clear search">
+      <button
+        class="clear-button"
+        on:click={clearSearch}
+        aria-label="Clear search"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -92,7 +96,9 @@
     border-radius: 6px;
     font-size: 0.9rem;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
   }
 
   .search-input:focus {
@@ -116,7 +122,9 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    transition: background-color 0.15s, color 0.15s;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
   }
 
   .clear-button:hover {

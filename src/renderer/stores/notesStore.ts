@@ -15,9 +15,16 @@ interface NotesState {
 
   // Actions
   loadNotes: () => Promise<void>;
-  createNote: (title: string, content?: string, tags?: string[]) => Promise<void>;
+  createNote: (
+    title: string,
+    content?: string,
+    tags?: string[]
+  ) => Promise<void>;
   selectNote: (noteId: string) => Promise<void>;
-  updateNote: (noteId: string, updates: { title?: string; content?: string; tags?: string[] }) => Promise<void>;
+  updateNote: (
+    noteId: string,
+    updates: { title?: string; content?: string; tags?: string[] }
+  ) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   toggleSidebar: () => void;
@@ -28,7 +35,9 @@ interface NotesState {
  * Ensures isLoading is always reset even when errors occur
  */
 const withLoading = async <T>(
-  set: (state: Partial<NotesState> | ((state: NotesState) => Partial<NotesState>)) => void,
+  set: (
+    state: Partial<NotesState> | ((state: NotesState) => Partial<NotesState>)
+  ) => void,
   operation: () => Promise<T>,
   options: { rethrow?: boolean } = {}
 ): Promise<T | void> => {
@@ -108,7 +117,8 @@ export const notesStore = createStore<NotesState>((set, get) => ({
         if (updatedNote) {
           set((state) => ({
             notes: state.notes.map((n) => (n.id === noteId ? updatedNote : n)),
-            currentNote: state.currentNoteId === noteId ? updatedNote : state.currentNote,
+            currentNote:
+              state.currentNoteId === noteId ? updatedNote : state.currentNote,
           }));
         }
       },
@@ -124,8 +134,10 @@ export const notesStore = createStore<NotesState>((set, get) => ({
         await window.electronAPI.notes.delete(noteId);
         set((state) => ({
           notes: state.notes.filter((n) => n.id !== noteId),
-          currentNoteId: state.currentNoteId === noteId ? null : state.currentNoteId,
-          currentNote: state.currentNoteId === noteId ? null : state.currentNote,
+          currentNoteId:
+            state.currentNoteId === noteId ? null : state.currentNoteId,
+          currentNote:
+            state.currentNoteId === noteId ? null : state.currentNote,
         }));
       },
       { rethrow: true }

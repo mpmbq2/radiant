@@ -1,6 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase } from './connection';
-import type { Note, NoteWithContent, CreateNoteInput, UpdateNoteInput } from '../types';
+import type {
+  Note,
+  NoteWithContent,
+  CreateNoteInput,
+  UpdateNoteInput,
+} from '../types';
 
 export class NotesRepository {
   /**
@@ -34,7 +39,9 @@ export class NotesRepository {
    */
   getNoteById(noteId: string): Note | null {
     const db = getDatabase();
-    const stmt = db.prepare('SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL');
+    const stmt = db.prepare(
+      'SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL'
+    );
     const result = stmt.get(noteId) as Note | undefined;
     return result || null;
   }

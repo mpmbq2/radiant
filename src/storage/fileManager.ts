@@ -59,7 +59,10 @@ export class FileManager {
   /**
    * Read note content from file
    */
-  readNote(filePath: string): { content: string; frontmatter: NoteFrontmatter } {
+  readNote(filePath: string): {
+    content: string;
+    frontmatter: NoteFrontmatter;
+  } {
     if (!fs.existsSync(filePath)) {
       throw new Error(`Note file not found: ${filePath}`);
     }

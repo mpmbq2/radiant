@@ -2,9 +2,18 @@ import { v4 as uuidv4 } from 'uuid';
 import { notesRepository } from '../database/notesRepository';
 import { tagsRepository } from '../database/tagsRepository';
 import { fileManager } from '../storage/fileManager';
-import type { Note, NoteWithContent, CreateNoteInput, UpdateNoteInput } from '../types';
+import type {
+  Note,
+  NoteWithContent,
+  CreateNoteInput,
+  UpdateNoteInput,
+} from '../types';
 import { createLogger } from '../utils/logger';
-import { validateNoteTitle, validateNoteContent, validateTags } from '../utils/validation';
+import {
+  validateNoteTitle,
+  validateNoteContent,
+  validateTags,
+} from '../utils/validation';
 
 const logger = createLogger('NotesService');
 
@@ -191,7 +200,10 @@ export class NotesService {
    * Helper: Count words in text
    */
   private countWords(text: string): number {
-    return text.trim().split(/\s+/).filter((word) => word.length > 0).length;
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
   }
 }
 

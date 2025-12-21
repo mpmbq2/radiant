@@ -16,7 +16,10 @@ export function initializeDatabase(): Database.Database {
 
   // Create database connection
   db = new Database(CONFIG.DATABASE_PATH, {
-    verbose: process.env.NODE_ENV === 'development' ? (msg: string) => logger.debug(msg) : undefined,
+    verbose:
+      process.env.NODE_ENV === 'development'
+        ? (msg: string) => logger.debug(msg)
+        : undefined,
   });
 
   // Enable WAL mode for better concurrency
@@ -43,7 +46,9 @@ export function initializeDatabase(): Database.Database {
 
 export function getDatabase(): Database.Database {
   if (!db) {
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
+    throw new Error(
+      'Database not initialized. Call initializeDatabase() first.'
+    );
   }
   return db;
 }

@@ -22,7 +22,9 @@
         (note) =>
           note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          note.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+          note.tags.some((tag) =>
+            tag.toLowerCase().includes(searchQuery.toLowerCase())
+          )
       )
     : notes;
 
@@ -42,7 +44,10 @@
     </div>
   {:else}
     <div class="list-header">
-      <span class="count">{filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}</span>
+      <span class="count"
+        >{filteredNotes.length}
+        {filteredNotes.length === 1 ? 'note' : 'notes'}</span
+      >
     </div>
     <div class="list-items">
       {#each filteredNotes as note (note.id)}

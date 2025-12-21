@@ -69,6 +69,6 @@ export function useStore<T, U>(
   return {
     get value() {
       return value;
-    }
+    },
   };
 }

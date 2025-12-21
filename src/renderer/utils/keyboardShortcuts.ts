@@ -17,7 +17,9 @@ export function createShortcutHandler(shortcuts: ShortcutHandler[]) {
 
   return (event: KeyboardEvent) => {
     for (const shortcut of shortcuts) {
-      const isShiftMatch = shortcut.modifiers.shift ? event.shiftKey : !event.shiftKey;
+      const isShiftMatch = shortcut.modifiers.shift
+        ? event.shiftKey
+        : !event.shiftKey;
       const isAltMatch = shortcut.modifiers.alt ? event.altKey : !event.altKey;
       const isKeyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
 
@@ -78,7 +80,9 @@ export function setupKeyboardShortcuts(): () => void {
       modifiers: { ctrl: true },
       description: 'Focus search',
       handler: () => {
-        const searchInput = document.querySelector('.search-input') as HTMLInputElement;
+        const searchInput = document.querySelector(
+          '.search-input'
+        ) as HTMLInputElement;
         searchInput?.focus();
       },
     },
