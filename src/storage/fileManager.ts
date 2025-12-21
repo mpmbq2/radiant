@@ -2,7 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { CONFIG } from '../config';
+import { createLogger } from '../utils/logger';
 import type { NoteFrontmatter } from '../types';
+
+const logger = createLogger('FileManager');
 
 export class FileManager {
   private notesDir: string | null = null;
@@ -25,7 +28,7 @@ export class FileManager {
       const dir = this.getNotesDir();
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
-        console.log(`Created notes directory: ${dir}`);
+        logger.info(`Created notes directory: ${dir}`);
       }
       this.initialized = true;
     }
@@ -50,7 +53,7 @@ export class FileManager {
     this.ensureNotesDirectory();
     const fileContent = matter.stringify(content, frontmatter);
     fs.writeFileSync(filePath, fileContent, 'utf-8');
-    console.log(`Note written to: ${filePath}`);
+    logger.info(`Note written to: ${filePath}`);
   }
 
   /**
@@ -76,7 +79,7 @@ export class FileManager {
   deleteNote(filePath: string): void {
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      console.log(`Note deleted: ${filePath}`);
+      logger.info(`Note deleted: ${filePath}`);
     }
   }
 

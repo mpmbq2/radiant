@@ -57,7 +57,7 @@ app.on('ready', () => {
     registerNotesHandlers();
     createWindow();
   } catch (error) {
-    console.error('Failed to initialize application:', error);
+    logger.error('Failed to initialize application:', error as Error);
     app.quit();
   }
 });

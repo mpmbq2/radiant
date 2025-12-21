@@ -178,7 +178,7 @@ export class NotesService {
         tags,
       };
     } catch (error) {
-      console.error(`Error reading note ${note.id}:`, error);
+      logger.error(`Error reading note ${note.id}:`, error as Error);
       return {
         ...note,
         content: '',
