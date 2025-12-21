@@ -2,9 +2,13 @@
   import type { NoteWithContent } from '../../types';
   import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 
-  export let note: NoteWithContent;
-  export let isSelected: boolean = false;
-  export let onClick: () => void;
+  interface Props {
+    note: NoteWithContent;
+    isSelected?: boolean;
+    onClick: () => void;
+  }
+
+  let { note, isSelected = false, onClick }: Props = $props();
 
   function formatDate(timestamp: number): string {
     const date = new Date(timestamp);
@@ -73,22 +77,22 @@
 <style>
   .note-item {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--color-border);
     cursor: pointer;
     transition: background-color 0.15s;
   }
 
   .note-item:hover {
-    background-color: #f9fafb;
+    background-color: var(--color-mantle);
   }
 
   .note-item.selected {
-    background-color: #eff6ff;
-    border-left: 3px solid #3b82f6;
+    background-color: var(--color-surface-0);
+    border-left: 3px solid var(--color-accent);
   }
 
   .note-item:focus {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid var(--color-accent);
     outline-offset: -2px;
   }
 
@@ -102,7 +106,7 @@
   .note-title {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #111827;
+    color: var(--color-text);
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -112,14 +116,14 @@
 
   .note-date {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: var(--color-subtext);
     flex-shrink: 0;
     margin-left: 0.5rem;
   }
 
   .note-preview {
     font-size: 0.85rem;
-    color: #4b5563;
+    color: var(--color-subtext);
     margin: 0 0 0.5rem 0;
     line-height: 1.4;
     overflow: hidden;
@@ -137,21 +141,22 @@
   .tag {
     font-size: 0.7rem;
     padding: 0.125rem 0.5rem;
-    background-color: #e0e7ff;
-    color: #3730a3;
+    background-color: var(--color-accent);
+    color: var(--color-base);
     border-radius: 9999px;
+    opacity: 0.8;
   }
 
   .tag-more {
     font-size: 0.7rem;
     padding: 0.125rem 0.5rem;
-    background-color: #f3f4f6;
-    color: #6b7280;
+    background-color: var(--color-surface);
+    color: var(--color-subtext);
     border-radius: 9999px;
   }
 
   .note-meta {
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--color-subtext-0);
   }
 </style>

@@ -3,10 +3,12 @@
 
   const store = notesStore;
 
-  let searchInput = '';
+  let searchInput = $state('');
 
   // Update store when input changes
-  $: store.getState().setSearchQuery(searchInput);
+  $effect(() => {
+    store.getState().setSearchQuery(searchInput);
+  });
 
   function clearSearch() {
     searchInput = '';
@@ -73,7 +75,7 @@
 <style>
   .search-bar {
     padding: 1rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .search-input-wrapper {
@@ -85,29 +87,32 @@
   .search-icon {
     position: absolute;
     left: 0.75rem;
-    color: #9ca3af;
+    color: var(--color-subtext-0);
     pointer-events: none;
   }
 
   .search-input {
     width: 100%;
     padding: 0.5rem 2.5rem 0.5rem 2.5rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 6px;
     font-size: 0.9rem;
     outline: none;
+    background-color: var(--color-base);
+    color: var(--color-text);
     transition:
       border-color 0.15s,
       box-shadow 0.15s;
   }
 
   .search-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--color-accent) 10%, transparent);
   }
 
   .search-input::placeholder {
-    color: #9ca3af;
+    color: var(--color-subtext-0);
   }
 
   .clear-button {
@@ -117,7 +122,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #9ca3af;
+    color: var(--color-subtext-0);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -128,7 +133,7 @@
   }
 
   .clear-button:hover {
-    background-color: #f3f4f6;
-    color: #6b7280;
+    background-color: var(--color-hover);
+    color: var(--color-subtext);
   }
 </style>

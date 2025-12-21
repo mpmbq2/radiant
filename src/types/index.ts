@@ -111,6 +111,8 @@ export interface NotesAPI {
  */
 export interface ElectronAPI {
   notes: NotesAPI;
+  getTheme: () => Promise<string>;
+  setTheme: (theme: string) => Promise<void>;
 }
 
 // ============================================================================

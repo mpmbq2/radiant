@@ -4,6 +4,7 @@ import started from 'electron-squirrel-startup';
 import { initializeDatabase, closeDatabase } from './database/connection';
 import { runMigrations } from './database/migrations';
 import { registerNotesHandlers } from './ipc/notesHandlers';
+import { registerPreferencesHandlers } from './ipc/preferencesHandlers';
 import { createLogger } from './utils/logger';
 
 const logger = createLogger('Main');
@@ -55,6 +56,7 @@ app.on('ready', () => {
     initializeDatabase();
     runMigrations();
     registerNotesHandlers();
+    registerPreferencesHandlers();
     createWindow();
   } catch (error) {
     logger.error('Failed to initialize application:', error as Error);

@@ -30,4 +30,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     getAllTags: (): Promise<string[]> => ipcRenderer.invoke('notes:getAllTags'),
   },
+
+  // Preferences operations
+  getTheme: (): Promise<string> => ipcRenderer.invoke('preferences:getTheme'),
+
+  setTheme: (theme: string): Promise<void> =>
+    ipcRenderer.invoke('preferences:setTheme', theme),
 });

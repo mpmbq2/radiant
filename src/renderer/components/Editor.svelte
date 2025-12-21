@@ -11,7 +11,7 @@
   const store = notesStore;
 
   let editorElement: HTMLDivElement;
-  export let editor: Editor | null = null;
+  let editor: Editor | null = null;
   let isSaving = false;
 
   let currentNote = $state(store.getState().currentNote);
@@ -74,12 +74,14 @@
   });
 
   // Update editor content when note changes
-  $: if (editor && currentNote) {
-    const currentContent = editor.getHTML();
-    if (currentContent !== currentNote.content) {
-      editor.commands.setContent(currentNote.content);
+  $effect(() => {
+    if (editor && currentNote) {
+      const currentContent = editor.getHTML();
+      if (currentContent !== currentNote.content) {
+        editor.commands.setContent(currentNote.content);
+      }
     }
-  }
+  });
 </script>
 
 <div class="editor-wrapper">
@@ -112,8 +114,8 @@
     top: 1rem;
     right: 1rem;
     padding: 0.5rem 1rem;
-    background-color: var(--color-primary, #3b82f6);
-    color: var(--color-primary-text, white);
+    background-color: var(--color-accent);
+    color: var(--color-base);
     border-radius: 6px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -134,7 +136,7 @@
   :global(.editor .ProseMirror p.is-editor-empty:first-child::before) {
     content: attr(data-placeholder);
     float: left;
-    color: var(--color-text-placeholder, #9ca3af);
+    color: var(--color-subtext-0);
     pointer-events: none;
     height: 0;
   }

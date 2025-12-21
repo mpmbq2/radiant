@@ -17,16 +17,18 @@
   });
 
   // Filter notes based on search query
-  $: filteredNotes = searchQuery
-    ? notes.filter(
-        (note) =>
-          note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          note.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-      )
-    : notes;
+  let filteredNotes = $derived(
+    searchQuery
+      ? notes.filter(
+          (note) =>
+            note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            note.tags.some((tag) =>
+              tag.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+        )
+      : notes
+  );
 
   function handleNoteClick(noteId: string) {
     store.getState().selectNote(noteId);
@@ -71,14 +73,14 @@
 
   .list-header {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e5e7eb;
-    background-color: #f9fafb;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-mantle);
   }
 
   .count {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--color-subtext);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -98,7 +100,7 @@
   }
 
   .empty-message p {
-    color: #6b7280;
+    color: var(--color-subtext);
     font-size: 0.95rem;
   }
 </style>
