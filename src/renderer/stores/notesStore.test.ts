@@ -113,7 +113,9 @@ describe('notesStore', () => {
     it('should create a note successfully', async () => {
       mockElectronAPI.notes.create.mockResolvedValue(mockNote);
 
-      await notesStore.getState().createNote('Test Note', 'Test content', ['test']);
+      await notesStore
+        .getState()
+        .createNote('Test Note', 'Test content', ['test']);
 
       const state = notesStore.getState();
       expect(state.notes).toHaveLength(1);
@@ -123,7 +125,10 @@ describe('notesStore', () => {
     });
 
     it('should add note to beginning of notes array', async () => {
-      const existingNote: NoteWithContent = { ...mockNote, id: 'existing-note' };
+      const existingNote: NoteWithContent = {
+        ...mockNote,
+        id: 'existing-note',
+      };
       notesStore.setState({ notes: [existingNote] });
 
       const newNote: NoteWithContent = { ...mockNote, id: 'new-note' };
@@ -152,7 +157,9 @@ describe('notesStore', () => {
     it('should call create with correct parameters', async () => {
       mockElectronAPI.notes.create.mockResolvedValue(mockNote);
 
-      await notesStore.getState().createNote('Title', 'Content', ['tag1', 'tag2']);
+      await notesStore
+        .getState()
+        .createNote('Title', 'Content', ['tag1', 'tag2']);
 
       expect(mockElectronAPI.notes.create).toHaveBeenCalledWith({
         title: 'Title',
@@ -194,12 +201,21 @@ describe('notesStore', () => {
 
   describe('updateNote', () => {
     it('should update a note successfully', async () => {
-      const updatedNote: NoteWithContent = { ...mockNote, title: 'Updated Title' };
-      notesStore.setState({ notes: [mockNote], currentNoteId: mockNote.id, currentNote: mockNote });
+      const updatedNote: NoteWithContent = {
+        ...mockNote,
+        title: 'Updated Title',
+      };
+      notesStore.setState({
+        notes: [mockNote],
+        currentNoteId: mockNote.id,
+        currentNote: mockNote,
+      });
 
       mockElectronAPI.notes.update.mockResolvedValue(updatedNote);
 
-      await notesStore.getState().updateNote(mockNote.id, { title: 'Updated Title' });
+      await notesStore
+        .getState()
+        .updateNote(mockNote.id, { title: 'Updated Title' });
 
       const state = notesStore.getState();
       expect(state.notes[0].title).toBe('Updated Title');
@@ -207,14 +223,27 @@ describe('notesStore', () => {
     });
 
     it('should update note in notes array', async () => {
-      const note1: NoteWithContent = { ...mockNote, id: 'note-1', title: 'Note 1' };
-      const note2: NoteWithContent = { ...mockNote, id: 'note-2', title: 'Note 2' };
+      const note1: NoteWithContent = {
+        ...mockNote,
+        id: 'note-1',
+        title: 'Note 1',
+      };
+      const note2: NoteWithContent = {
+        ...mockNote,
+        id: 'note-2',
+        title: 'Note 2',
+      };
       notesStore.setState({ notes: [note1, note2] });
 
-      const updatedNote2: NoteWithContent = { ...note2, title: 'Updated Note 2' };
+      const updatedNote2: NoteWithContent = {
+        ...note2,
+        title: 'Updated Note 2',
+      };
       mockElectronAPI.notes.update.mockResolvedValue(updatedNote2);
 
-      await notesStore.getState().updateNote('note-2', { title: 'Updated Note 2' });
+      await notesStore
+        .getState()
+        .updateNote('note-2', { title: 'Updated Note 2' });
 
       const state = notesStore.getState();
       expect(state.notes[0].title).toBe('Note 1');
@@ -222,16 +251,21 @@ describe('notesStore', () => {
     });
 
     it('should update currentNote if it is the updated note', async () => {
-      const updatedNote: NoteWithContent = { ...mockNote, content: 'Updated content' };
+      const updatedNote: NoteWithContent = {
+        ...mockNote,
+        content: 'Updated content',
+      };
       notesStore.setState({
         notes: [mockNote],
         currentNoteId: mockNote.id,
-        currentNote: mockNote
+        currentNote: mockNote,
       });
 
       mockElectronAPI.notes.update.mockResolvedValue(updatedNote);
 
-      await notesStore.getState().updateNote(mockNote.id, { content: 'Updated content' });
+      await notesStore
+        .getState()
+        .updateNote(mockNote.id, { content: 'Updated content' });
 
       const state = notesStore.getState();
       expect(state.currentNote?.content).toBe('Updated content');
@@ -243,13 +277,15 @@ describe('notesStore', () => {
       notesStore.setState({
         notes: [currentNote, otherNote],
         currentNoteId: 'current-note',
-        currentNote: currentNote
+        currentNote: currentNote,
       });
 
       const updatedOther: NoteWithContent = { ...otherNote, title: 'Updated' };
       mockElectronAPI.notes.update.mockResolvedValue(updatedOther);
 
-      await notesStore.getState().updateNote('other-note', { title: 'Updated' });
+      await notesStore
+        .getState()
+        .updateNote('other-note', { title: 'Updated' });
 
       const state = notesStore.getState();
       expect(state.currentNote?.id).toBe('current-note');
@@ -298,7 +334,7 @@ describe('notesStore', () => {
       notesStore.setState({
         notes: [mockNote],
         currentNoteId: mockNote.id,
-        currentNote: mockNote
+        currentNote: mockNote,
       });
 
       mockElectronAPI.notes.delete.mockResolvedValue(undefined);
@@ -316,7 +352,7 @@ describe('notesStore', () => {
       notesStore.setState({
         notes: [currentNote, otherNote],
         currentNoteId: 'current-note',
-        currentNote: currentNote
+        currentNote: currentNote,
       });
 
       mockElectronAPI.notes.delete.mockResolvedValue(undefined);

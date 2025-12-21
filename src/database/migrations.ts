@@ -29,6 +29,12 @@ CREATE TABLE IF NOT EXISTS note_tags (
   FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
+-- Preferences table: stores user preferences as key-value pairs
+CREATE TABLE IF NOT EXISTS preferences (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_notes_modified_at ON notes(modified_at);
 CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at);
@@ -61,6 +67,7 @@ export function resetDatabase(): void {
     DROP TABLE IF EXISTS note_tags;
     DROP TABLE IF EXISTS tags;
     DROP TABLE IF EXISTS notes;
+    DROP TABLE IF EXISTS preferences;
   `);
 
   console.log('Database reset complete');
