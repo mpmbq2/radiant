@@ -31,7 +31,7 @@ interface NotesState {
   toggleSidebar: () => void;
 }
 
-export const notesStore = createStore<NotesState>((set, get) => ({
+export const notesStore = createStore<NotesState>((set) => ({
   // Initial state
   notes: [],
   currentNoteId: null,
@@ -108,7 +108,7 @@ export const notesStore = createStore<NotesState>((set, get) => ({
         }
       },
       'Update note',
-      { rethrow: true }
+      { rethrow: true, silent: true }
     );
   },
 
