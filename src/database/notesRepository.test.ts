@@ -28,7 +28,7 @@ describe('NotesRepository', () => {
 
   beforeEach(() => {
     clearTestDatabase();
-    repository = new NotesRepository();
+    repository = new NotesRepository(getDatabase());
   });
 
   describe('createNote', () => {

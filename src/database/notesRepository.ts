@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import type Database from 'better-sqlite3';
 import { getDatabase } from './connection';
 import type {
   Note,
@@ -8,11 +9,17 @@ import type {
 } from '../types';
 
 export class NotesRepository {
+  private db: Database.Database;
+
+  constructor(db: Database.Database) {
+    this.db = db;
+  }
+
   /**
    * Create a new note (database only, no file content)
    */
   createNote(noteId: string, title: string, filePath: string): Note {
-    const db = getDatabase();
+    const db = this.db;
     const now = Date.now();
 
     const stmt = db.prepare(`
@@ -38,8 +45,7 @@ export class NotesRepository {
    * Get note by ID
    */
   getNoteById(noteId: string): Note | null {
-    const db = getDatabase();
-    const stmt = db.prepare(
+    const stmt = this.db.prepare(
       'SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL'
     );
     const result = stmt.get(noteId) as Note | undefined;
@@ -50,8 +56,7 @@ export class NotesRepository {
    * Get all notes (excluding deleted)
    */
   getAllNotes(): Note[] {
-    const db = getDatabase();
-    const stmt = db.prepare(`
+    const stmt = this.db.prepare(`
       SELECT * FROM notes
       WHERE deleted_at IS NULL
       ORDER BY modified_at DESC
@@ -70,7 +75,6 @@ export class NotesRepository {
       character_count?: number;
     }
   ): void {
-    const db = getDatabase();
     const now = Date.now();
 
     const fields: string[] = ['modified_at = ?'];
@@ -91,7 +95,7 @@ export class NotesRepository {
 
     values.push(noteId);
 
-    const stmt = db.prepare(`
+    const stmt = this.db.prepare(`
       UPDATE notes
       SET ${fields.join(', ')}
       WHERE id = ?
@@ -104,10 +108,9 @@ export class NotesRepository {
    * Soft delete a note
    */
   deleteNote(noteId: string): void {
-    const db = getDatabase();
     const now = Date.now();
 
-    const stmt = db.prepare('UPDATE notes SET deleted_at = ? WHERE id = ?');
+    const stmt = this.db.prepare('UPDATE notes SET deleted_at = ? WHERE id = ?');
     stmt.run(now, noteId);
   }
 
@@ -115,8 +118,7 @@ export class NotesRepository {
    * Permanently delete a note
    */
   permanentlyDeleteNote(noteId: string): void {
-    const db = getDatabase();
-    const stmt = db.prepare('DELETE FROM notes WHERE id = ?');
+    const stmt = this.db.prepare('DELETE FROM notes WHERE id = ?');
     stmt.run(noteId);
   }
 
@@ -124,8 +126,7 @@ export class NotesRepository {
    * Search notes by title
    */
   searchNotesByTitle(query: string): Note[] {
-    const db = getDatabase();
-    const stmt = db.prepare(`
+    const stmt = this.db.prepare(`
       SELECT * FROM notes
       WHERE title LIKE ? AND deleted_at IS NULL
       ORDER BY modified_at DESC
@@ -134,5 +135,13 @@ export class NotesRepository {
   }
 }
 
-// Singleton instance
-export const notesRepository = new NotesRepository();
+// Lazy singleton instance (for backward compatibility)
+let _notesRepository: NotesRepository | null = null;
+export const notesRepository = new Proxy({} as NotesRepository, {
+  get(target, prop) {
+    if (!_notesRepository) {
+      _notesRepository = new NotesRepository(getDatabase());
+    }
+    return (_notesRepository as any)[prop];
+  },
+});
