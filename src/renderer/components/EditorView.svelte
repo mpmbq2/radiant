@@ -121,6 +121,7 @@
 <style>
   .editor-view {
     display: flex;
+    flex: 1;
     flex-direction: column;
     height: 100vh;
     background-color: var(--color-base);
