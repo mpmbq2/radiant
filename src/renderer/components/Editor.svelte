@@ -56,7 +56,7 @@
       content: currentNote?.content || '',
       editorProps: {
         attributes: {
-          class: 'prose prose-slate max-w-none focus:outline-none px-8 py-6',
+          class: 'prose max-w-none focus:outline-none px-8 py-6',
         },
       },
       onUpdate: ({ editor }) => {
@@ -130,6 +130,20 @@
   /* Editor-specific customizations */
   :global(.editor .ProseMirror) {
     outline: none;
+    color: var(--color-text);
+  }
+
+  /* Theme-aware typography */
+  :global(.editor .ProseMirror p),
+  :global(.editor .ProseMirror h1),
+  :global(.editor .ProseMirror h2),
+  :global(.editor .ProseMirror h3),
+  :global(.editor .ProseMirror h4),
+  :global(.editor .ProseMirror h5),
+  :global(.editor .ProseMirror h6),
+  :global(.editor .ProseMirror blockquote),
+  :global(.editor .ProseMirror li) {
+    color: var(--color-text);
   }
 
   /* Placeholder styling for empty editor */
