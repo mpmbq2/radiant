@@ -35,11 +35,16 @@
     return format(date, 'MMM d, yyyy');
   }
 
+  function stripHtmlTags(html: string): string {
+    return html.replace(/<[^>]*>?/gm, '');
+  }
+
   function truncateContent(content: string, maxLength: number = 100): string {
-    if (content.length <= maxLength) {
-      return content;
+    const plainText = stripHtmlTags(content);
+    if (plainText.length <= maxLength) {
+      return plainText;
     }
-    return content.substring(0, maxLength).trim() + '...';
+    return plainText.substring(0, maxLength).trim() + '...';
   }
 </script>
 
