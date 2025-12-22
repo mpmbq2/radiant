@@ -1,6 +1,7 @@
 <script lang="ts">
   import { notesStore } from '../stores/notesStore';
   import SearchBar from './SearchBar.svelte';
+  import FilterBar from './FilterBar.svelte';
   import NoteList from './NoteList.svelte';
   import ThemeSelector from './ThemeSelector.svelte';
 
@@ -38,6 +39,8 @@
   </div>
 
   <SearchBar />
+
+  <FilterBar />
 
   <div class="sidebar-content">
     <NoteList />

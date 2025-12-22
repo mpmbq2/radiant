@@ -1,6 +1,11 @@
 import { createStore } from 'zustand/vanilla';
 import { withLoading } from '../utils/withLoading';
 import type { NoteWithContent } from '../../types';
+import type { FilterInterface } from '../../filters';
+import { registerBuiltInFilters } from '../../filters';
+
+// Initialize filter registry
+registerBuiltInFilters();
 
 interface NotesState {
   // Data
@@ -10,6 +15,9 @@ interface NotesState {
   searchQuery: string;
   isLoading: boolean;
   error: string | null;
+
+  // Filter State
+  activeFilters: FilterInterface[];
 
   // UI State
   isSidebarCollapsed: boolean;
@@ -29,9 +37,15 @@ interface NotesState {
   deleteNote: (noteId: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   toggleSidebar: () => void;
+
+  // Filter Actions
+  addFilter: (filter: FilterInterface) => void;
+  removeFilter: (index: number) => void;
+  clearFilters: () => void;
+  getFilteredNotes: () => NoteWithContent[];
 }
 
-export const notesStore = createStore<NotesState>((set) => ({
+export const notesStore = createStore<NotesState>((set, get) => ({
   // Initial state
   notes: [],
   currentNoteId: null,
@@ -39,6 +53,7 @@ export const notesStore = createStore<NotesState>((set) => ({
   searchQuery: '',
   isLoading: false,
   error: null,
+  activeFilters: [],
   isSidebarCollapsed: false,
 
   // Load all notes
@@ -139,5 +154,48 @@ export const notesStore = createStore<NotesState>((set) => ({
   // Toggle sidebar
   toggleSidebar: () => {
     set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed }));
+  },
+
+  // Add filter
+  addFilter: (filter) => {
+    set((state) => ({
+      activeFilters: [...state.activeFilters, filter],
+    }));
+  },
+
+  // Remove filter by index
+  removeFilter: (index) => {
+    set((state) => ({
+      activeFilters: state.activeFilters.filter((_, i) => i !== index),
+    }));
+  },
+
+  // Clear all filters
+  clearFilters: () => {
+    set({ activeFilters: [] });
+  },
+
+  // Get filtered notes
+  getFilteredNotes: () => {
+    const state = get();
+    let filtered = state.notes;
+
+    // Apply all active filters sequentially
+    for (const filter of state.activeFilters) {
+      filtered = filter.applyWithContent(filtered);
+    }
+
+    // Apply search query if present
+    if (state.searchQuery) {
+      const query = state.searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (note) =>
+          note.title.toLowerCase().includes(query) ||
+          note.content.toLowerCase().includes(query) ||
+          note.tags.some((tag) => tag.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
   },
 }));
