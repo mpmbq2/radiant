@@ -5,30 +5,19 @@
 
   const store = notesStore;
 
-  let notes = $state(store.getState().notes);
   let currentNoteId = $state(store.getState().currentNoteId);
   let searchQuery = $state(store.getState().searchQuery);
+  let activeFiltersCount = $state(store.getState().activeFilters.length);
 
   // Subscribe to store changes with automatic cleanup
   subscribeStore(store, (state) => {
-    notes = state.notes;
     currentNoteId = state.currentNoteId;
     searchQuery = state.searchQuery;
+    activeFiltersCount = state.activeFilters.length;
   });
 
-  // Filter notes based on search query
-  let filteredNotes = $derived(
-    searchQuery
-      ? notes.filter(
-          (note) =>
-            note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            note.tags.some((tag) =>
-              tag.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-        )
-      : notes
-  );
+  // Get filtered notes from store (applies both filters and search)
+  let filteredNotes = $derived(store.getState().getFilteredNotes());
 
   function handleNoteClick(noteId: string) {
     store.getState().selectNote(noteId);
@@ -38,8 +27,8 @@
 <div class="note-list">
   {#if filteredNotes.length === 0}
     <div class="empty-message">
-      {#if searchQuery}
-        <p>No notes found matching "{searchQuery}"</p>
+      {#if searchQuery || activeFiltersCount > 0}
+        <p>No notes found matching your {searchQuery ? 'search' : ''}{searchQuery && activeFiltersCount > 0 ? ' and ' : ''}{activeFiltersCount > 0 ? 'filters' : ''}</p>
       {:else}
         <p>No notes yet. Create your first note!</p>
       {/if}
