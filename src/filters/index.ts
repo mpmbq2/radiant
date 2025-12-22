@@ -65,3 +65,33 @@ export {
 
 // Filter registration
 export { registerBuiltInFilters } from './registerFilters';
+
+// Configuration system
+export {
+  SavedFilter,
+  SavedFilterMetadata,
+  FilterConfigSchema,
+  FilterPropertySchema,
+  FilterValidationRules,
+  FilterConfigImportExportResult,
+  FilterExportOptions,
+  FilterImportOptions,
+  FilterConfigValidationResult,
+  FILTER_CONFIG_CONSTANTS,
+} from './filterConfig';
+
+export {
+  FilterConfigService,
+  FilterConfigRepository,
+  filterConfigService,
+} from './FilterConfigService';
+
+export {
+  PresetFilterId,
+  FILTER_PRESETS,
+  getAllPresets,
+  getPreset,
+  isPresetId,
+  getPresetsByTag,
+  searchPresets,
+} from './FilterPresets';

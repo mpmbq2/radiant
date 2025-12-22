@@ -38,12 +38,28 @@ CREATE TABLE IF NOT EXISTS preferences (
   value TEXT NOT NULL
 );
 
+-- Saved Filters table: stores user-created filter configurations
+CREATE TABLE IF NOT EXISTS saved_filters (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  config TEXT NOT NULL,
+  tags TEXT,
+  created_at INTEGER NOT NULL,
+  modified_at INTEGER NOT NULL,
+  is_preset INTEGER DEFAULT 0,
+  icon TEXT,
+  color TEXT
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_notes_modified_at ON notes(modified_at);
 CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at);
 CREATE INDEX IF NOT EXISTS idx_notes_deleted_at ON notes(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_note_tags_note_id ON note_tags(note_id);
 CREATE INDEX IF NOT EXISTS idx_note_tags_tag_id ON note_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_saved_filters_created_at ON saved_filters(created_at);
+CREATE INDEX IF NOT EXISTS idx_saved_filters_modified_at ON saved_filters(modified_at);
 `;
 
 export function runMigrations(): void {
@@ -71,6 +87,7 @@ export function resetDatabase(): void {
     DROP TABLE IF EXISTS tags;
     DROP TABLE IF EXISTS notes;
     DROP TABLE IF EXISTS preferences;
+    DROP TABLE IF EXISTS saved_filters;
   `);
 
   logger.info('Database reset complete');
