@@ -1,4 +1,7 @@
 import { notesStore } from '../stores/notesStore';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('keyboardShortcuts');
 
 export interface ShortcutHandler {
   key: string;
@@ -12,38 +15,47 @@ export interface ShortcutHandler {
   description: string;
 }
 
+/**
+ * Check if keyboard event modifiers match the required modifiers for a shortcut.
+ * Handles platform-specific differences (e.g., Cmd on macOS vs Ctrl on Windows/Linux).
+ *
+ * Uses a simple binary check: required modifier must match event modifier state.
+ * For example, if shift is required, event.shiftKey must be true, and vice versa.
+ */
+function areModifiersMatching(
+  requiredModifiers: ShortcutHandler['modifiers'],
+  event: KeyboardEvent,
+  isMac: boolean
+): boolean {
+  const shiftMatches = Boolean(requiredModifiers.shift) === event.shiftKey;
+  const altMatches = Boolean(requiredModifiers.alt) === event.altKey;
+
+  // Platform-specific: Ctrl on macOS means Cmd (Meta), Ctrl elsewhere means Ctrl key
+  const ctrlRequired = Boolean(requiredModifiers.ctrl);
+  const ctrlMatches = isMac
+    ? ctrlRequired === event.metaKey
+    : ctrlRequired === event.ctrlKey;
+
+  // Meta modifier: only applies on macOS; on other platforms it should never match
+  const metaRequired = Boolean(requiredModifiers.meta);
+  const metaMatches = isMac ? metaRequired === event.metaKey : !event.metaKey;
+
+  return shiftMatches && altMatches && ctrlMatches && metaMatches;
+}
+
 export function createShortcutHandler(shortcuts: ShortcutHandler[]) {
   const isMac = process.platform === 'darwin';
 
   return (event: KeyboardEvent) => {
     for (const shortcut of shortcuts) {
-      const isShiftMatch = shortcut.modifiers.shift
-        ? event.shiftKey
-        : !event.shiftKey;
-      const isAltMatch = shortcut.modifiers.alt ? event.altKey : !event.altKey;
       const isKeyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
+      const isModifiersMatch = areModifiersMatching(
+        shortcut.modifiers,
+        event,
+        isMac
+      );
 
-      // Platform-specific modifier detection
-      // On macOS: Ctrl modifier should check Meta key (Cmd)
-      // On Windows/Linux: Ctrl modifier should check Ctrl key
-      let isCtrlMatch = false;
-      if (shortcut.modifiers.ctrl) {
-        isCtrlMatch = isMac ? event.metaKey : event.ctrlKey;
-      } else {
-        isCtrlMatch = isMac ? !event.metaKey : !event.ctrlKey;
-      }
-
-      // Meta modifier should only check Meta key on macOS (ignore on Windows/Linux)
-      let isMetaMatch = false;
-      if (shortcut.modifiers.meta) {
-        isMetaMatch = isMac && event.metaKey;
-      } else {
-        isMetaMatch = !event.metaKey;
-      }
-
-      const isModifierMatch = isCtrlMatch && isMetaMatch;
-
-      if (isKeyMatch && isModifierMatch && isShiftMatch && isAltMatch) {
+      if (isKeyMatch && isModifiersMatch) {
         event.preventDefault();
         shortcut.handler(event);
         break;
@@ -72,7 +84,7 @@ export function setupKeyboardShortcuts(): () => void {
       handler: () => {
         // Note: Auto-save is already handled by the editor
         // This shortcut is just to prevent default browser behavior
-        console.log('Note is auto-saved');
+        logger.info('Note is auto-saved');
       },
     },
     {

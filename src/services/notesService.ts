@@ -107,7 +107,11 @@ export class NotesService {
     }
 
     const now = Date.now();
-    const updates: any = {};
+    const updates: {
+      title?: string;
+      word_count?: number;
+      character_count?: number;
+    } = {};
 
     // Update title if provided
     if (input.title !== undefined) {
@@ -187,7 +191,14 @@ export class NotesService {
         tags,
       };
     } catch (error) {
-      logger.error(`Error reading note ${note.id}:`, error as Error);
+      if (error instanceof Error) {
+        logger.error(`Error reading note ${note.id}:`, error);
+      } else {
+        logger.error(
+          `Error reading note ${note.id}:`,
+          new Error(String(error))
+        );
+      }
       return {
         ...note,
         content: '',

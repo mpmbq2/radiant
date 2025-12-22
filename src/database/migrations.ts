@@ -1,4 +1,7 @@
 import { getDatabase } from './connection';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('migrations');
 
 const SCHEMA_SQL = `
 -- Notes table: stores metadata about each note
@@ -49,14 +52,14 @@ export function runMigrations(): void {
   // Execute schema (CREATE TABLE IF NOT EXISTS is idempotent)
   db.exec(SCHEMA_SQL);
 
-  console.log('Database migrations completed');
+  logger.info('Database migrations completed');
 
   // Verify tables exist
   const tables = db
     .prepare(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
     .all();
 
-  console.log('Database tables:', tables);
+  logger.debug('Database tables:', tables);
 }
 
 export function resetDatabase(): void {
@@ -70,7 +73,7 @@ export function resetDatabase(): void {
     DROP TABLE IF EXISTS preferences;
   `);
 
-  console.log('Database reset complete');
+  logger.info('Database reset complete');
 
   // Re-run migrations
   runMigrations();

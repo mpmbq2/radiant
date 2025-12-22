@@ -38,37 +38,3 @@ export function subscribeStore<T>(
   const unsubscribe = store.subscribe(callback);
   onDestroy(unsubscribe);
 }
-
-/**
- * Create reactive store bindings with a selector function.
- * Returns a reactive container that automatically updates when the store changes.
- *
- * This is useful when you need a single computed value from the store.
- *
- * @param store - The Zustand vanilla store
- * @param selector - Function to select/derive a value from store state
- * @returns Reactive state container with a `value` property
- *
- * @example
- * const currentNote = useStore(notesStore, s => s.currentNote);
- * const isLoading = useStore(notesStore, s => s.isLoading);
- * // Access values: currentNote.value, isLoading.value
- */
-export function useStore<T, U>(
-  store: StoreApi<T>,
-  selector: (state: T) => U
-): { value: U } {
-  let value = $state(selector(store.getState())) as U;
-
-  const unsubscribe = store.subscribe((state) => {
-    value = selector(state);
-  });
-
-  onDestroy(unsubscribe);
-
-  return {
-    get value() {
-      return value;
-    },
-  };
-}

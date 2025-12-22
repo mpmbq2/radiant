@@ -1,13 +1,8 @@
 import { preferencesRepository } from '../database/preferencesRepository';
 import { createLogger } from '../utils/logger';
+import { VALID_THEMES, DEFAULT_THEME, type Theme } from '../config/themes';
 
 const logger = createLogger('PreferencesService');
-
-// Valid Catppuccin theme flavors
-const VALID_THEMES = ['latte', 'frappe', 'macchiato', 'mocha'] as const;
-type Theme = (typeof VALID_THEMES)[number];
-
-const DEFAULT_THEME: Theme = 'mocha';
 const THEME_KEY = 'theme';
 
 export class PreferencesService {
@@ -34,7 +29,11 @@ export class PreferencesService {
 
       return theme;
     } catch (error) {
-      logger.error('Error getting theme:', error as Error);
+      if (error instanceof Error) {
+        logger.error('Error getting theme:', error);
+      } else {
+        logger.error('Error getting theme:', new Error(String(error)));
+      }
       return DEFAULT_THEME;
     }
   }
@@ -56,7 +55,11 @@ export class PreferencesService {
       preferencesRepository.setPreference(THEME_KEY, theme);
       logger.info('Theme set successfully:', theme);
     } catch (error) {
-      logger.error('Error saving theme:', error as Error);
+      if (error instanceof Error) {
+        logger.error('Error saving theme:', error);
+      } else {
+        logger.error('Error saving theme:', new Error(String(error)));
+      }
       throw error;
     }
   }
