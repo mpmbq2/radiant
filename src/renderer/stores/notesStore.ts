@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla';
+import { withLoading } from '../utils/withLoading';
 import type { NoteWithContent } from '../../types';
 
 interface NotesState {
@@ -30,31 +31,6 @@ interface NotesState {
   toggleSidebar: () => void;
 }
 
-/**
- * Helper function to wrap async operations with consistent loading state management
- * Ensures isLoading is always reset even when errors occur
- */
-const withLoading = async <T>(
-  set: (
-    state: Partial<NotesState> | ((state: NotesState) => Partial<NotesState>)
-  ) => void,
-  operation: () => Promise<T>,
-  options: { rethrow?: boolean } = {}
-): Promise<T | void> => {
-  set({ isLoading: true, error: null });
-  try {
-    return await operation();
-  } catch (error) {
-    console.error('Operation failed:', error);
-    set({ error: (error as Error).message });
-    if (options.rethrow) {
-      throw error;
-    }
-  } finally {
-    set({ isLoading: false });
-  }
-};
-
 export const notesStore = createStore<NotesState>((set, get) => ({
   // Initial state
   notes: [],
@@ -67,10 +43,14 @@ export const notesStore = createStore<NotesState>((set, get) => ({
 
   // Load all notes
   loadNotes: async () => {
-    await withLoading(set, async () => {
-      const notes = await window.electronAPI.notes.getAll();
-      set({ notes });
-    });
+    await withLoading(
+      set,
+      async () => {
+        const notes = await window.electronAPI.notes.getAll();
+        set({ notes });
+      },
+      'Load notes'
+    );
   },
 
   // Create new note
@@ -89,19 +69,24 @@ export const notesStore = createStore<NotesState>((set, get) => ({
           currentNote: newNote,
         }));
       },
+      'Create note',
       { rethrow: true }
     );
   },
 
   // Select and load a note
   selectNote: async (noteId) => {
-    await withLoading(set, async () => {
-      const note = await window.electronAPI.notes.getById(noteId);
-      set({
-        currentNoteId: noteId,
-        currentNote: note,
-      });
-    });
+    await withLoading(
+      set,
+      async () => {
+        const note = await window.electronAPI.notes.getById(noteId);
+        set({
+          currentNoteId: noteId,
+          currentNote: note,
+        });
+      },
+      'Select note'
+    );
   },
 
   // Update note
@@ -122,6 +107,7 @@ export const notesStore = createStore<NotesState>((set, get) => ({
           }));
         }
       },
+      'Update note',
       { rethrow: true }
     );
   },
@@ -140,6 +126,7 @@ export const notesStore = createStore<NotesState>((set, get) => ({
             state.currentNoteId === noteId ? null : state.currentNote,
         }));
       },
+      'Delete note',
       { rethrow: true }
     );
   },

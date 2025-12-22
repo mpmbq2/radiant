@@ -59,7 +59,14 @@ app.on('ready', () => {
     registerPreferencesHandlers();
     createWindow();
   } catch (error) {
-    logger.error('Failed to initialize application:', error as Error);
+    if (error instanceof Error) {
+      logger.error('Failed to initialize application:', error);
+    } else {
+      logger.error(
+        'Failed to initialize application:',
+        new Error(String(error))
+      );
+    }
     app.quit();
   }
 });

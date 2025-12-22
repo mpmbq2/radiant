@@ -74,7 +74,7 @@ export class NotesRepository {
     const now = Date.now();
 
     const fields: string[] = ['modified_at = ?'];
-    const values: any[] = [now];
+    const values: Array<number | string> = [now];
 
     if (updates.title !== undefined) {
       fields.push('title = ?');
