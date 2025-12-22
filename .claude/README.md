@@ -95,8 +95,21 @@ When the hook runs successfully, you'll see output like:
 
 **If beads doesn't install:**
 - Check that Go is available in the environment
-- The script will attempt to install via GitHub releases or `go install`
+- The script will attempt multiple installation methods: `go install` first, then curl installer
+- If both fail (e.g., due to network restrictions), a fallback wrapper will be created
+- The fallback wrapper provides read-only access: `bd ready` and `bd show <id>`
 - Beads may be installed in `$HOME/go/bin` or `/root/go/bin`
+
+**Network-Restricted Environments:**
+If network access is restricted during session start, the hook will automatically create a fallback `bd` wrapper that:
+- Reads issues from `.beads/issues.jsonl` directly
+- Supports: `bd ready` (list ready issues) and `bd show <id>` (view issue details)
+- Provides installation instructions for full functionality
+- To install the full bd later when network is available:
+  ```bash
+  go install github.com/steveyegge/beads/cmd/bd@latest
+  ln -sf $HOME/go/bin/bd /root/.local/bin/bd
+  ```
 
 **If `bd` command is not found after installation:**
 - Verify `bd` binary exists: `ls -la ~/go/bin/bd /root/go/bin/bd`
