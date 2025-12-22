@@ -9,30 +9,28 @@
  * - FilterInterface: Abstract base class for all filters
  * - FilterConfig: Serializable configuration format
  * - FilterFactory: Function type for creating filters from config
- * - Types and enums for common filter operations
+ * - Concrete filter implementations: TagFilter, DateRangeFilter, ContentFilter, CompositeFilter
+ * - FilterRegistry: Registry for creating filters from configuration
  *
  * Usage example:
  * ```typescript
- * import { FilterInterface, FilterConfig } from './filters';
+ * import { TagFilter, filterRegistry, registerBuiltInFilters } from './filters';
  *
- * // Concrete filter implementation (to be created)
- * class TagFilter extends FilterInterface {
- *   // ... implementation
- * }
+ * // Register built-in filters
+ * registerBuiltInFilters();
  *
- * // Apply filter to notes
+ * // Apply filter directly
  * const filter = new TagFilter({ tags: ['work'] });
  * const filtered = filter.apply(allNotes);
  *
- * // Serialize for storage
- * const config = filter.serialize();
- * const json = JSON.stringify(config);
- *
- * // Deserialize and recreate
- * const restoredFilter = createFilterFromConfig(JSON.parse(json));
+ * // Or create from configuration
+ * const config = { type: 'TAG', tags: ['work'] };
+ * const filter = filterRegistry.createFromConfig(config);
+ * const filtered = filter.apply(allNotes);
  * ```
  */
 
+// Base interfaces and types
 export {
   FilterInterface,
   FilterConfig,
@@ -51,3 +49,19 @@ export {
   SortField,
   FilterType,
 } from './types';
+
+// Concrete filter implementations
+export { TagFilter, TagFilterConfig } from './TagFilter';
+export { DateRangeFilter, DateRangeFilterConfig } from './DateRangeFilter';
+export { ContentFilter, ContentFilterConfig } from './ContentFilter';
+export { CompositeFilter, CompositeFilterConfig } from './CompositeFilter';
+
+// Registry
+export {
+  FilterRegistry,
+  FilterMetadata,
+  filterRegistry,
+} from './FilterRegistry';
+
+// Filter registration
+export { registerBuiltInFilters } from './registerFilters';
