@@ -1,3 +1,4 @@
+import type { PreferencesRepository } from '../database/preferencesRepository';
 import { preferencesRepository } from '../database/preferencesRepository';
 import { createLogger } from '../utils/logger';
 import { VALID_THEMES, DEFAULT_THEME, type Theme } from '../config/themes';
@@ -6,13 +7,19 @@ const logger = createLogger('PreferencesService');
 const THEME_KEY = 'theme';
 
 export class PreferencesService {
+  private preferencesRepo: PreferencesRepository;
+
+  constructor(preferencesRepo: PreferencesRepository) {
+    this.preferencesRepo = preferencesRepo;
+  }
+
   /**
    * Get the current theme
    * Returns "mocha" as default if no theme is set
    */
   getTheme(): string {
     try {
-      const theme = preferencesRepository.getPreference(THEME_KEY);
+      const theme = this.preferencesRepo.getPreference(THEME_KEY);
       if (!theme) {
         logger.info('No theme set, using default:', DEFAULT_THEME);
         return DEFAULT_THEME;
@@ -52,7 +59,7 @@ export class PreferencesService {
     }
 
     try {
-      preferencesRepository.setPreference(THEME_KEY, theme);
+      this.preferencesRepo.setPreference(THEME_KEY, theme);
       logger.info('Theme set successfully:', theme);
     } catch (error) {
       if (error instanceof Error) {
@@ -72,5 +79,13 @@ export class PreferencesService {
   }
 }
 
-// Singleton instance
-export const preferencesService = new PreferencesService();
+// Lazy singleton instance (for backward compatibility)
+let _preferencesService: PreferencesService | null = null;
+export const preferencesService = new Proxy({} as PreferencesService, {
+  get(target, prop) {
+    if (!_preferencesService) {
+      _preferencesService = new PreferencesService(preferencesRepository);
+    }
+    return (_preferencesService as any)[prop];
+  },
+});

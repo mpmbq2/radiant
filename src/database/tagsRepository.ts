@@ -1,12 +1,19 @@
+import type Database from 'better-sqlite3';
 import { getDatabase } from './connection';
 import type { Tag } from '../types';
 
 export class TagsRepository {
+  private db: Database.Database;
+
+  constructor(db: Database.Database) {
+    this.db = db;
+  }
+
   /**
    * Get or create a tag by name
    */
   getOrCreateTag(tagName: string): Tag {
-    const db = getDatabase();
+    const db = this.db;
     const normalized = tagName.toLowerCase().trim();
 
     // Try to get existing tag
@@ -31,16 +38,14 @@ export class TagsRepository {
    * Get all tags
    */
   getAllTags(): Tag[] {
-    const db = getDatabase();
-    return db.prepare('SELECT * FROM tags ORDER BY name').all() as Tag[];
+    return this.db.prepare('SELECT * FROM tags ORDER BY name').all() as Tag[];
   }
 
   /**
    * Get tags for a specific note
    */
   getTagsForNote(noteId: string): string[] {
-    const db = getDatabase();
-    const result = db
+    const result = this.db
       .prepare(
         `
       SELECT t.name
@@ -59,17 +64,15 @@ export class TagsRepository {
    * Set tags for a note (replaces existing tags)
    */
   setTagsForNote(noteId: string, tagNames: string[]): void {
-    const db = getDatabase();
-
     // Start transaction
-    const transaction = db.transaction(() => {
+    const transaction = this.db.transaction(() => {
       // Remove existing tags
-      db.prepare('DELETE FROM note_tags WHERE note_id = ?').run(noteId);
+      this.db.prepare('DELETE FROM note_tags WHERE note_id = ?').run(noteId);
 
       // Add new tags
       for (const tagName of tagNames) {
         const tag = this.getOrCreateTag(tagName);
-        db.prepare('INSERT INTO note_tags (note_id, tag_id) VALUES (?, ?)').run(
+        this.db.prepare('INSERT INTO note_tags (note_id, tag_id) VALUES (?, ?)').run(
           noteId,
           tag.id
         );
@@ -83,10 +86,9 @@ export class TagsRepository {
    * Get notes with a specific tag
    */
   getNotesWithTag(tagName: string): string[] {
-    const db = getDatabase();
     const normalized = tagName.toLowerCase().trim();
 
-    const result = db
+    const result = this.db
       .prepare(
         `
       SELECT nt.note_id
@@ -104,8 +106,7 @@ export class TagsRepository {
    * Delete unused tags
    */
   deleteUnusedTags(): number {
-    const db = getDatabase();
-    const result = db
+    const result = this.db
       .prepare(
         `
       DELETE FROM tags
@@ -118,5 +119,13 @@ export class TagsRepository {
   }
 }
 
-// Singleton instance
-export const tagsRepository = new TagsRepository();
+// Lazy singleton instance (for backward compatibility)
+let _tagsRepository: TagsRepository | null = null;
+export const tagsRepository = new Proxy({} as TagsRepository, {
+  get(target, prop) {
+    if (!_tagsRepository) {
+      _tagsRepository = new TagsRepository(getDatabase());
+    }
+    return (_tagsRepository as any)[prop];
+  },
+});

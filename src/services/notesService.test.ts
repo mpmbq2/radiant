@@ -8,12 +8,15 @@ import {
   afterAll,
 } from 'vitest';
 import { NotesService } from './notesService';
+import { NotesRepository } from '../database/notesRepository';
+import { TagsRepository } from '../database/tagsRepository';
 import { FileManager } from '../storage/fileManager';
 import {
   setupTestDatabase,
   teardownTestDatabase,
   clearTestDatabase,
 } from '../database/testHelpers';
+import { getDatabase } from '../database/connection';
 import { ValidationError } from '../utils/validation';
 import fs from 'fs';
 import path from 'path';
@@ -42,7 +45,11 @@ describe('NotesService', () => {
     // we'll need to use the config's test directory setting
     fileManager = new FileManager(testDir);
 
-    service = new NotesService();
+    // Create repositories with test database
+    const db = getDatabase();
+    const notesRepo = new NotesRepository(db);
+    const tagsRepo = new TagsRepository(db);
+    service = new NotesService(notesRepo, tagsRepo);
   });
 
   afterEach(() => {

@@ -14,6 +14,7 @@ import {
   teardownTestDatabase,
   clearTestDatabase,
 } from './testHelpers';
+import { getDatabase } from './connection';
 
 describe('TagsRepository', () => {
   let repository: TagsRepository;
@@ -29,8 +30,9 @@ describe('TagsRepository', () => {
 
   beforeEach(() => {
     clearTestDatabase();
-    repository = new TagsRepository();
-    notesRepository = new NotesRepository();
+    const db = getDatabase();
+    repository = new TagsRepository(db);
+    notesRepository = new NotesRepository(db);
   });
 
   describe('getOrCreateTag', () => {

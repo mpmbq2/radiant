@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
+import type { NotesRepository } from '../database/notesRepository';
+import type { TagsRepository } from '../database/tagsRepository';
 import { notesRepository } from '../database/notesRepository';
 import { tagsRepository } from '../database/tagsRepository';
 import { fileManager } from '../storage/fileManager';
@@ -18,6 +20,14 @@ import {
 const logger = createLogger('NotesService');
 
 export class NotesService {
+  private notesRepo: NotesRepository;
+  private tagsRepo: TagsRepository;
+
+  constructor(notesRepo: NotesRepository, tagsRepo: TagsRepository) {
+    this.notesRepo = notesRepo;
+    this.tagsRepo = tagsRepo;
+  }
+
   /**
    * Create a new note (database + file)
    */
@@ -36,7 +46,7 @@ export class NotesService {
     const now = Date.now();
 
     // Create database record
-    const note = notesRepository.createNote(noteId, input.title, filePath);
+    const note = this.notesRepo.createNote(noteId, input.title, filePath);
 
     // Write file
     fileManager.writeNote(filePath, input.content || '', {
@@ -48,14 +58,14 @@ export class NotesService {
 
     // Set tags if provided
     if (input.tags && input.tags.length > 0) {
-      tagsRepository.setTagsForNote(noteId, input.tags);
+      this.tagsRepo.setTagsForNote(noteId, input.tags);
     }
 
     // Calculate word count
     const wordCount = this.countWords(input.content || '');
     const charCount = (input.content || '').length;
 
-    notesRepository.updateNote(noteId, {
+    this.notesRepo.updateNote(noteId, {
       word_count: wordCount,
       character_count: charCount,
     });
@@ -73,14 +83,14 @@ export class NotesService {
    * Get note by ID with content
    */
   async getNoteById(noteId: string): Promise<NoteWithContent | null> {
-    const note = notesRepository.getNoteById(noteId);
+    const note = this.notesRepo.getNoteById(noteId);
     if (!note) {
       return null;
     }
 
     // Read file content
     const { content } = fileManager.readNote(note.file_path);
-    const tags = tagsRepository.getTagsForNote(noteId);
+    const tags = this.tagsRepo.getTagsForNote(noteId);
 
     return {
       ...note,
@@ -93,7 +103,7 @@ export class NotesService {
    * Get all notes with content
    */
   async getAllNotes(): Promise<NoteWithContent[]> {
-    const notes = notesRepository.getAllNotes();
+    const notes = this.notesRepo.getAllNotes();
     return notes.map((note) => this.enrichNoteWithContent(note));
   }
 
@@ -101,7 +111,7 @@ export class NotesService {
    * Update note
    */
   async updateNote(input: UpdateNoteInput): Promise<NoteWithContent | null> {
-    const note = notesRepository.getNoteById(input.id);
+    const note = this.notesRepo.getNoteById(input.id);
     if (!note) {
       return null;
     }
@@ -141,12 +151,12 @@ export class NotesService {
 
     // Update tags if provided
     if (input.tags !== undefined) {
-      tagsRepository.setTagsForNote(input.id, input.tags);
+      this.tagsRepo.setTagsForNote(input.id, input.tags);
     }
 
     // Update database
     if (Object.keys(updates).length > 0) {
-      notesRepository.updateNote(input.id, updates);
+      this.notesRepo.updateNote(input.id, updates);
     }
 
     // Return updated note
@@ -157,13 +167,13 @@ export class NotesService {
    * Delete note
    */
   async deleteNote(noteId: string): Promise<void> {
-    const note = notesRepository.getNoteById(noteId);
+    const note = this.notesRepo.getNoteById(noteId);
     if (!note) {
       throw new Error(`Note not found: ${noteId}`);
     }
 
     // Soft delete in database
-    notesRepository.deleteNote(noteId);
+    this.notesRepo.deleteNote(noteId);
 
     // Delete file
     fileManager.deleteNote(note.file_path);
@@ -173,7 +183,7 @@ export class NotesService {
    * Search notes by title
    */
   async searchNotes(query: string): Promise<NoteWithContent[]> {
-    const notes = notesRepository.searchNotesByTitle(query);
+    const notes = this.notesRepo.searchNotesByTitle(query);
     return notes.map((note) => this.enrichNoteWithContent(note));
   }
 
@@ -183,7 +193,7 @@ export class NotesService {
   private enrichNoteWithContent(note: Note): NoteWithContent {
     try {
       const { content } = fileManager.readNote(note.file_path);
-      const tags = tagsRepository.getTagsForNote(note.id);
+      const tags = this.tagsRepo.getTagsForNote(note.id);
 
       return {
         ...note,
@@ -218,5 +228,13 @@ export class NotesService {
   }
 }
 
-// Singleton instance
-export const notesService = new NotesService();
+// Lazy singleton instance (for backward compatibility)
+let _notesService: NotesService | null = null;
+export const notesService = new Proxy({} as NotesService, {
+  get(target, prop) {
+    if (!_notesService) {
+      _notesService = new NotesService(notesRepository, tagsRepository);
+    }
+    return (_notesService as any)[prop];
+  },
+});
