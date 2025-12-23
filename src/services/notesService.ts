@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { NotesRepository } from '../database/notesRepository';
 import type { TagsRepository } from '../database/tagsRepository';
-import { notesRepository } from '../database/notesRepository';
-import { tagsRepository } from '../database/tagsRepository';
+import { getNotesRepository } from '../database/notesRepository';
+import { getTagsRepository } from '../database/tagsRepository';
 import { fileManager } from '../storage/fileManager';
 import type {
   Note,
@@ -228,13 +228,12 @@ export class NotesService {
   }
 }
 
-// Lazy singleton instance (for backward compatibility)
-let _notesService: NotesService | null = null;
-export const notesService = new Proxy({} as NotesService, {
-  get(target, prop) {
-    if (!_notesService) {
-      _notesService = new NotesService(notesRepository, tagsRepository);
-    }
-    return (_notesService as any)[prop];
-  },
-});
+// Lazy singleton instance
+let _instance: NotesService | null = null;
+
+export function getNotesService(): NotesService {
+  if (!_instance) {
+    _instance = new NotesService(getNotesRepository(), getTagsRepository());
+  }
+  return _instance;
+}

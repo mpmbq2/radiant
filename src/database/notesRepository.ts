@@ -7,6 +7,9 @@ import type {
   CreateNoteInput,
   UpdateNoteInput,
 } from '../types';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('NotesRepository');
 
 export class NotesRepository {
   private db: Database.Database;
@@ -19,49 +22,76 @@ export class NotesRepository {
    * Create a new note (database only, no file content)
    */
   createNote(noteId: string, title: string, filePath: string): Note {
-    const db = this.db;
-    const now = Date.now();
+    try {
+      const db = this.db;
+      const now = Date.now();
 
-    const stmt = db.prepare(`
-      INSERT INTO notes (id, title, file_path, created_at, modified_at, word_count, character_count)
-      VALUES (?, ?, ?, ?, ?, 0, 0)
-    `);
+      const stmt = db.prepare(`
+        INSERT INTO notes (id, title, file_path, created_at, modified_at, word_count, character_count)
+        VALUES (?, ?, ?, ?, ?, 0, 0)
+      `);
 
-    stmt.run(noteId, title, filePath, now, now);
+      stmt.run(noteId, title, filePath, now, now);
 
-    return {
-      id: noteId,
-      title,
-      file_path: filePath,
-      created_at: now,
-      modified_at: now,
-      deleted_at: null,
-      word_count: 0,
-      character_count: 0,
-    };
+      return {
+        id: noteId,
+        title,
+        file_path: filePath,
+        created_at: now,
+        modified_at: now,
+        deleted_at: null,
+        word_count: 0,
+        character_count: 0,
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error('Error creating note in database:', error);
+      } else {
+        logger.error('Error creating note in database:', new Error(String(error)));
+      }
+      throw error;
+    }
   }
 
   /**
    * Get note by ID
    */
   getNoteById(noteId: string): Note | null {
-    const stmt = this.db.prepare(
-      'SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL'
-    );
-    const result = stmt.get(noteId) as Note | undefined;
-    return result || null;
+    try {
+      const stmt = this.db.prepare(
+        'SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL'
+      );
+      const result = stmt.get(noteId) as Note | undefined;
+      return result || null;
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(`Error getting note ${noteId}:`, error);
+      } else {
+        logger.error(`Error getting note ${noteId}:`, new Error(String(error)));
+      }
+      throw error;
+    }
   }
 
   /**
    * Get all notes (excluding deleted)
    */
   getAllNotes(): Note[] {
-    const stmt = this.db.prepare(`
-      SELECT * FROM notes
-      WHERE deleted_at IS NULL
-      ORDER BY modified_at DESC
-    `);
-    return stmt.all() as Note[];
+    try {
+      const stmt = this.db.prepare(`
+        SELECT * FROM notes
+        WHERE deleted_at IS NULL
+        ORDER BY modified_at DESC
+      `);
+      return stmt.all() as Note[];
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error('Error getting all notes:', error);
+      } else {
+        logger.error('Error getting all notes:', new Error(String(error)));
+      }
+      throw error;
+    }
   }
 
   /**
@@ -75,73 +105,108 @@ export class NotesRepository {
       character_count?: number;
     }
   ): void {
-    const now = Date.now();
+    try {
+      const now = Date.now();
 
-    const fields: string[] = ['modified_at = ?'];
-    const values: Array<number | string> = [now];
+      const fields: string[] = ['modified_at = ?'];
+      const values: Array<number | string> = [now];
 
-    if (updates.title !== undefined) {
-      fields.push('title = ?');
-      values.push(updates.title);
+      if (updates.title !== undefined) {
+        fields.push('title = ?');
+        values.push(updates.title);
+      }
+      if (updates.word_count !== undefined) {
+        fields.push('word_count = ?');
+        values.push(updates.word_count);
+      }
+      if (updates.character_count !== undefined) {
+        fields.push('character_count = ?');
+        values.push(updates.character_count);
+      }
+
+      values.push(noteId);
+
+      const stmt = this.db.prepare(`
+        UPDATE notes
+        SET ${fields.join(', ')}
+        WHERE id = ?
+      `);
+
+      stmt.run(...values);
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(`Error updating note ${noteId}:`, error);
+      } else {
+        logger.error(`Error updating note ${noteId}:`, new Error(String(error)));
+      }
+      throw error;
     }
-    if (updates.word_count !== undefined) {
-      fields.push('word_count = ?');
-      values.push(updates.word_count);
-    }
-    if (updates.character_count !== undefined) {
-      fields.push('character_count = ?');
-      values.push(updates.character_count);
-    }
-
-    values.push(noteId);
-
-    const stmt = this.db.prepare(`
-      UPDATE notes
-      SET ${fields.join(', ')}
-      WHERE id = ?
-    `);
-
-    stmt.run(...values);
   }
 
   /**
    * Soft delete a note
    */
   deleteNote(noteId: string): void {
-    const now = Date.now();
+    try {
+      const now = Date.now();
 
-    const stmt = this.db.prepare('UPDATE notes SET deleted_at = ? WHERE id = ?');
-    stmt.run(now, noteId);
+      const stmt = this.db.prepare('UPDATE notes SET deleted_at = ? WHERE id = ?');
+      stmt.run(now, noteId);
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(`Error deleting note ${noteId}:`, error);
+      } else {
+        logger.error(`Error deleting note ${noteId}:`, new Error(String(error)));
+      }
+      throw error;
+    }
   }
 
   /**
    * Permanently delete a note
    */
   permanentlyDeleteNote(noteId: string): void {
-    const stmt = this.db.prepare('DELETE FROM notes WHERE id = ?');
-    stmt.run(noteId);
+    try {
+      const stmt = this.db.prepare('DELETE FROM notes WHERE id = ?');
+      stmt.run(noteId);
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(`Error permanently deleting note ${noteId}:`, error);
+      } else {
+        logger.error(`Error permanently deleting note ${noteId}:`, new Error(String(error)));
+      }
+      throw error;
+    }
   }
 
   /**
    * Search notes by title
    */
   searchNotesByTitle(query: string): Note[] {
-    const stmt = this.db.prepare(`
-      SELECT * FROM notes
-      WHERE title LIKE ? AND deleted_at IS NULL
-      ORDER BY modified_at DESC
-    `);
-    return stmt.all(`%${query}%`) as Note[];
+    try {
+      const stmt = this.db.prepare(`
+        SELECT * FROM notes
+        WHERE title LIKE ? AND deleted_at IS NULL
+        ORDER BY modified_at DESC
+      `);
+      return stmt.all(`%${query}%`) as Note[];
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error('Error searching notes by title:', error);
+      } else {
+        logger.error('Error searching notes by title:', new Error(String(error)));
+      }
+      throw error;
+    }
   }
 }
 
-// Lazy singleton instance (for backward compatibility)
+// Lazy singleton instance
 let _notesRepository: NotesRepository | null = null;
-export const notesRepository = new Proxy({} as NotesRepository, {
-  get(target, prop) {
-    if (!_notesRepository) {
-      _notesRepository = new NotesRepository(getDatabase());
-    }
-    return (_notesRepository as any)[prop];
-  },
-});
+
+export function getNotesRepository(): NotesRepository {
+  if (!_notesRepository) {
+    _notesRepository = new NotesRepository(getDatabase());
+  }
+  return _notesRepository;
+}

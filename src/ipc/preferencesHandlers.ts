@@ -1,10 +1,12 @@
-import { preferencesService } from '../services/preferencesService';
+import { getPreferencesService } from '../services/preferencesService';
 import { createLogger } from '../utils/logger';
 import { createHandler } from './utils/createIpcHandler';
 
 const logger = createLogger('PreferencesHandlers');
 
 export function registerPreferencesHandlers(): void {
+  const preferencesService = getPreferencesService();
+
   // Get theme
   createHandler(
     'preferences:getTheme',

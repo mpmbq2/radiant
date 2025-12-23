@@ -1,5 +1,5 @@
-import { notesService } from '../services/notesService';
-import { tagsRepository } from '../database/tagsRepository';
+import { getNotesService } from '../services/notesService';
+import { getTagsRepository } from '../database/tagsRepository';
 import { createLogger } from '../utils/logger';
 import { createHandler } from './utils/createIpcHandler';
 import type {
@@ -11,6 +11,8 @@ import type {
 const logger = createLogger('NotesHandlers');
 
 export function registerNotesHandlers(): void {
+  const notesService = getNotesService();
+
   // Create note
   createHandler(
     'notes:create',
@@ -64,7 +66,7 @@ export function registerNotesHandlers(): void {
     'notes:getAllTags',
     'getting tags',
     async () => {
-      const tags = tagsRepository.getAllTags();
+      const tags = getTagsRepository().getAllTags();
       return tags.map((t) => t.name);
     },
     logger

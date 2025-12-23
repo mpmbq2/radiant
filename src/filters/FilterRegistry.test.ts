@@ -77,6 +77,36 @@ describe('FilterRegistry', () => {
       expect(filter.filterType).toBe(FilterType.TAG);
     });
 
+    it('should throw error for null config', () => {
+      expect(() => {
+        registry.createFromConfig(null as any);
+      }).toThrow('Filter configuration cannot be null or undefined');
+    });
+
+    it('should throw error for undefined config', () => {
+      expect(() => {
+        registry.createFromConfig(undefined as any);
+      }).toThrow('Filter configuration cannot be null or undefined');
+    });
+
+    it('should throw error for non-object config', () => {
+      expect(() => {
+        registry.createFromConfig('invalid' as any);
+      }).toThrow('Filter configuration must be an object, received string');
+    });
+
+    it('should throw error for number config', () => {
+      expect(() => {
+        registry.createFromConfig(123 as any);
+      }).toThrow('Filter configuration must be an object, received number');
+    });
+
+    it('should throw error for array config', () => {
+      expect(() => {
+        registry.createFromConfig(['TAG', 'work'] as any);
+      }).toThrow('Filter configuration cannot be an array');
+    });
+
     it('should throw error for missing type field', () => {
       const config = {
         tags: ['work'],
@@ -85,6 +115,39 @@ describe('FilterRegistry', () => {
       expect(() => {
         registry.createFromConfig(config);
       }).toThrow('Filter configuration must have a "type" field');
+    });
+
+    it('should throw error for non-string type', () => {
+      const config = {
+        type: 123,
+        tags: ['work'],
+      } as any;
+
+      expect(() => {
+        registry.createFromConfig(config);
+      }).toThrow('Filter configuration "type" must be a string, received number');
+    });
+
+    it('should throw error for empty string type', () => {
+      const config = {
+        type: '',
+        tags: ['work'],
+      } as any;
+
+      expect(() => {
+        registry.createFromConfig(config);
+      }).toThrow('Filter configuration "type" cannot be an empty string');
+    });
+
+    it('should throw error for whitespace-only type', () => {
+      const config = {
+        type: '   ',
+        tags: ['work'],
+      } as any;
+
+      expect(() => {
+        registry.createFromConfig(config);
+      }).toThrow('Filter configuration "type" cannot be an empty string');
     });
 
     it('should throw error for unregistered type', () => {
