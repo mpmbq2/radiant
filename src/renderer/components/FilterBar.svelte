@@ -2,7 +2,13 @@
   import { notesStore } from '../stores/notesStore';
   import { subscribeStore } from '../utils/useStore.svelte';
   import { TagFilter, DateRangeFilter, ContentFilter } from '../../filters';
-  import { FilterType, DateRangePreset, DateField, LogicalOperator, ComparisonOperator } from '../../filters/types';
+  import {
+    FilterType,
+    DateRangePreset,
+    DateField,
+    LogicalOperator,
+    ComparisonOperator,
+  } from '../../filters/types';
   import type { FilterInterface } from '../../filters';
 
   const store = notesStore;
@@ -57,7 +63,9 @@
 
   // Tag Filter Modal State
   let selectedTags = $state<string[]>([]);
-  let tagOperator = $state<LogicalOperator.AND | LogicalOperator.OR>(LogicalOperator.OR);
+  let tagOperator = $state<LogicalOperator.AND | LogicalOperator.OR>(
+    LogicalOperator.OR
+  );
 
   function addTagFilter() {
     if (selectedTags.length > 0) {
@@ -100,8 +108,8 @@
       const filter = new ContentFilter({
         query: contentQuery.trim(),
         operator: ComparisonOperator.CONTAINS,
-        searchInTitle: true,
-        searchInContent: true,
+        searchTitle: true,
+        searchContent: true,
       });
       store.getState().addFilter(filter);
       contentQuery = '';
@@ -138,7 +146,11 @@
   // Close modals when clicking outside
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.filter-modal') && !target.closest('.filter-menu')) {
+    if (
+      !target.closest('.filter-modal') &&
+      !target.closest('.filter-menu') &&
+      !target.closest('.filter-trigger')
+    ) {
       showFilterMenu = false;
     }
   }
@@ -181,7 +193,10 @@
   {/if}
 
   <div class="filter-actions">
-    <button class="add-filter-button" on:click={toggleFilterMenu}>
+    <button
+      class="add-filter-button filter-trigger"
+      on:click={toggleFilterMenu}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
@@ -252,7 +267,10 @@
       </div>
 
       <div class="modal-actions">
-        <button class="cancel-button" on:click={() => (showTagFilterModal = false)}>
+        <button
+          class="cancel-button"
+          on:click={() => (showTagFilterModal = false)}
+        >
           Cancel
         </button>
         <button
@@ -296,7 +314,10 @@
       </div>
 
       <div class="modal-actions">
-        <button class="cancel-button" on:click={() => (showDateFilterModal = false)}>
+        <button
+          class="cancel-button"
+          on:click={() => (showDateFilterModal = false)}
+        >
           Cancel
         </button>
         <button class="apply-button" on:click={addDateFilter}>
@@ -324,7 +345,10 @@
       </div>
 
       <div class="modal-actions">
-        <button class="cancel-button" on:click={() => (showContentFilterModal = false)}>
+        <button
+          class="cancel-button"
+          on:click={() => (showContentFilterModal = false)}
+        >
           Cancel
         </button>
         <button
@@ -556,7 +580,7 @@
     background-color: var(--color-surface-1);
   }
 
-  .tag-checkbox input[type="checkbox"] {
+  .tag-checkbox input[type='checkbox'] {
     cursor: pointer;
   }
 

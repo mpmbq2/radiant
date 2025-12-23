@@ -33,11 +33,13 @@
 // Base interfaces and types
 export {
   FilterInterface,
+  validationSuccess,
+  validationFailure,
+} from './FilterInterface';
+export type {
   FilterConfig,
   FilterValidationResult,
   FilterFactory,
-  validationSuccess,
-  validationFailure,
 } from './FilterInterface';
 
 export {
@@ -51,17 +53,18 @@ export {
 } from './types';
 
 // Concrete filter implementations
-export { TagFilter, TagFilterConfig } from './TagFilter';
-export { DateRangeFilter, DateRangeFilterConfig } from './DateRangeFilter';
-export { ContentFilter, ContentFilterConfig } from './ContentFilter';
-export { CompositeFilter, CompositeFilterConfig } from './CompositeFilter';
+export { TagFilter } from './TagFilter';
+export type { TagFilterConfig } from './TagFilter';
+export { DateRangeFilter } from './DateRangeFilter';
+export type { DateRangeFilterConfig } from './DateRangeFilter';
+export { ContentFilter } from './ContentFilter';
+export type { ContentFilterConfig } from './ContentFilter';
+export { CompositeFilter } from './CompositeFilter';
+export type { CompositeFilterConfig } from './CompositeFilter';
 
 // Registry
-export {
-  FilterRegistry,
-  FilterMetadata,
-  filterRegistry,
-} from './FilterRegistry';
+export { FilterRegistry, filterRegistry } from './FilterRegistry';
+export type { FilterMetadata } from './FilterRegistry';
 
 // Filter registration
 export { registerBuiltInFilters } from './registerFilters';

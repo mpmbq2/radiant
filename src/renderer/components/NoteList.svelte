@@ -2,22 +2,54 @@
   import { notesStore } from '../stores/notesStore';
   import { subscribeStore } from '../utils/useStore.svelte';
   import NoteListItem from './NoteListItem.svelte';
+  import type { NoteWithContent } from '../../types';
+  import type { FilterInterface } from '../../filters';
 
   const store = notesStore;
 
+  let notes = $state(store.getState().notes);
   let currentNoteId = $state(store.getState().currentNoteId);
   let searchQuery = $state(store.getState().searchQuery);
-  let activeFiltersCount = $state(store.getState().activeFilters.length);
+  let activeFilters = $state(store.getState().activeFilters);
 
   // Subscribe to store changes with automatic cleanup
   subscribeStore(store, (state) => {
+    notes = state.notes;
     currentNoteId = state.currentNoteId;
     searchQuery = state.searchQuery;
-    activeFiltersCount = state.activeFilters.length;
+    activeFilters = state.activeFilters;
   });
 
-  // Get filtered notes from store (applies both filters and search)
-  let filteredNotes = $derived(store.getState().getFilteredNotes());
+  // Compute filtered notes reactively
+  let filteredNotes = $derived(
+    computeFilteredNotes(notes, activeFilters, searchQuery)
+  );
+
+  function computeFilteredNotes(
+    notes: NoteWithContent[],
+    filters: FilterInterface[],
+    query: string
+  ): NoteWithContent[] {
+    let filtered = notes;
+
+    // Apply all active filters sequentially
+    for (const filter of filters) {
+      filtered = filter.applyWithContent(filtered);
+    }
+
+    // Apply search query if present
+    if (query) {
+      const lowerQuery = query.toLowerCase();
+      filtered = filtered.filter(
+        (note) =>
+          note.title.toLowerCase().includes(lowerQuery) ||
+          note.content.toLowerCase().includes(lowerQuery) ||
+          note.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
+      );
+    }
+
+    return filtered;
+  }
 
   function handleNoteClick(noteId: string) {
     store.getState().selectNote(noteId);
@@ -27,8 +59,14 @@
 <div class="note-list">
   {#if filteredNotes.length === 0}
     <div class="empty-message">
-      {#if searchQuery || activeFiltersCount > 0}
-        <p>No notes found matching your {searchQuery ? 'search' : ''}{searchQuery && activeFiltersCount > 0 ? ' and ' : ''}{activeFiltersCount > 0 ? 'filters' : ''}</p>
+      {#if searchQuery || activeFilters.length > 0}
+        <p>
+          No notes found matching your {searchQuery
+            ? 'search'
+            : ''}{searchQuery && activeFilters.length > 0
+            ? ' and '
+            : ''}{activeFilters.length > 0 ? 'filters' : ''}
+        </p>
       {:else}
         <p>No notes yet. Create your first note!</p>
       {/if}
