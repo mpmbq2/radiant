@@ -7,7 +7,9 @@
   import { notesStore } from '../stores/notesStore';
   import { subscribeStore } from '../utils/useStore.svelte';
   import EditorToolbar from './EditorToolbar.svelte';
+  import { createLogger } from '../../utils/logger';
 
+  const logger = createLogger('Editor');
   const store = notesStore;
 
   let editorElement: HTMLDivElement;
@@ -31,7 +33,11 @@
         try {
           await store.getState().updateNote(currentNote.id, { content });
         } catch (error) {
-          console.error('Failed to save note:', error);
+          if (error instanceof Error) {
+            logger.error('Failed to save note:', error);
+          } else {
+            logger.error('Failed to save note:', new Error(String(error)));
+          }
         } finally {
           isSaving = false;
         }

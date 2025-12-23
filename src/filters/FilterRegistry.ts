@@ -59,11 +59,10 @@ export class FilterRegistry {
    * @throws Error if type is not registered or factory fails
    */
   createFromConfig(config: FilterConfig): FilterInterface {
-    const { type } = config;
+    // Validate config before attempting to create filter
+    this.validateConfig(config);
 
-    if (!type) {
-      throw new Error('Filter configuration must have a "type" field');
-    }
+    const { type } = config;
 
     const factory = this.factories.get(type);
 
@@ -92,6 +91,51 @@ export class FilterRegistry {
           error instanceof Error ? error.message : String(error)
         }`
       );
+    }
+  }
+
+  /**
+   * Validate FilterConfig before creating filter instance
+   *
+   * @param config - Filter configuration to validate
+   * @throws Error if config is invalid
+   * @private
+   */
+  private validateConfig(config: FilterConfig): void {
+    // Check if config is null or undefined
+    if (config == null) {
+      throw new Error('Filter configuration cannot be null or undefined');
+    }
+
+    // Check if config is an object
+    if (typeof config !== 'object') {
+      throw new Error(
+        `Filter configuration must be an object, received ${typeof config}`
+      );
+    }
+
+    // Check if config is an array (arrays are objects but not valid configs)
+    if (Array.isArray(config)) {
+      throw new Error('Filter configuration cannot be an array');
+    }
+
+    // Check if type field exists
+    if (!('type' in config)) {
+      throw new Error('Filter configuration must have a "type" field');
+    }
+
+    const { type } = config;
+
+    // Check if type is a string
+    if (typeof type !== 'string') {
+      throw new Error(
+        `Filter configuration "type" must be a string, received ${typeof type}`
+      );
+    }
+
+    // Check if type is not empty
+    if (type.trim().length === 0) {
+      throw new Error('Filter configuration "type" cannot be an empty string');
     }
   }
 

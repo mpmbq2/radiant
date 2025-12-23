@@ -1,5 +1,5 @@
 import type { PreferencesRepository } from '../database/preferencesRepository';
-import { preferencesRepository } from '../database/preferencesRepository';
+import { getPreferencesRepository } from '../database/preferencesRepository';
 import { createLogger } from '../utils/logger';
 import { VALID_THEMES, DEFAULT_THEME, type Theme } from '../config/themes';
 
@@ -79,13 +79,12 @@ export class PreferencesService {
   }
 }
 
-// Lazy singleton instance (for backward compatibility)
-let _preferencesService: PreferencesService | null = null;
-export const preferencesService = new Proxy({} as PreferencesService, {
-  get(target, prop) {
-    if (!_preferencesService) {
-      _preferencesService = new PreferencesService(preferencesRepository);
-    }
-    return (_preferencesService as any)[prop];
-  },
-});
+// Lazy singleton instance
+let _instance: PreferencesService | null = null;
+
+export function getPreferencesService(): PreferencesService {
+  if (!_instance) {
+    _instance = new PreferencesService(getPreferencesRepository());
+  }
+  return _instance;
+}
