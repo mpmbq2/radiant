@@ -93,7 +93,7 @@ export class CompositeFilter extends FilterInterface {
       return notes;
     }
 
-    return notes.filter(note => this.matches(note));
+    return notes.filter((note) => this.matches(note));
   }
 
   applyWithContent(notes: NoteWithContent[]): NoteWithContent[] {
@@ -101,14 +101,14 @@ export class CompositeFilter extends FilterInterface {
       return notes;
     }
 
-    return notes.filter(note => this.matchesWithContent(note));
+    return notes.filter((note) => this.matchesWithContent(note));
   }
 
   serialize(): FilterConfig {
     return {
       type: this.config.type,
       operator: this.config.operator,
-      filters: this.config.filters.map(f => ({ ...f })),
+      filters: this.config.filters.map((f) => ({ ...f })),
     };
   }
 
@@ -135,7 +135,10 @@ export class CompositeFilter extends FilterInterface {
     }
 
     // NOT operator must have exactly one filter
-    if (this.config.operator === LogicalOperator.NOT && this.config.filters.length !== 1) {
+    if (
+      this.config.operator === LogicalOperator.NOT &&
+      this.config.filters.length !== 1
+    ) {
       errors.push('NOT operator must have exactly one filter');
     }
 
@@ -145,7 +148,9 @@ export class CompositeFilter extends FilterInterface {
         this.config.operator === LogicalOperator.OR) &&
       this.config.filters.length < 1
     ) {
-      errors.push(`${this.config.operator} operator must have at least one filter`);
+      errors.push(
+        `${this.config.operator} operator must have at least one filter`
+      );
     }
 
     // Validate each child filter
@@ -158,7 +163,9 @@ export class CompositeFilter extends FilterInterface {
       }
     }
 
-    return errors.length === 0 ? validationSuccess() : validationFailure(errors);
+    return errors.length === 0
+      ? validationSuccess()
+      : validationFailure(errors);
   }
 
   getDescription(): string {
@@ -166,7 +173,7 @@ export class CompositeFilter extends FilterInterface {
       return 'Composite filter (no filters)';
     }
 
-    const descriptions = this.childFilters.map(f => f.getDescription());
+    const descriptions = this.childFilters.map((f) => f.getDescription());
 
     switch (this.config.operator) {
       case LogicalOperator.AND:
@@ -187,11 +194,11 @@ export class CompositeFilter extends FilterInterface {
     const clonedConfig: CompositeFilterConfig = {
       type: FilterType.COMPOSITE,
       operator: this.config.operator,
-      filters: this.config.filters.map(f => ({ ...f })),
+      filters: this.config.filters.map((f) => ({ ...f })),
     };
 
     const cloned = new CompositeFilter(clonedConfig);
-    cloned.setChildFilters(this.childFilters.map(f => f.clone()));
+    cloned.setChildFilters(this.childFilters.map((f) => f.clone()));
     return cloned;
   }
 
@@ -202,10 +209,10 @@ export class CompositeFilter extends FilterInterface {
 
     switch (this.config.operator) {
       case LogicalOperator.AND:
-        return this.childFilters.every(filter => filter.matches(note));
+        return this.childFilters.every((filter) => filter.matches(note));
 
       case LogicalOperator.OR:
-        return this.childFilters.some(filter => filter.matches(note));
+        return this.childFilters.some((filter) => filter.matches(note));
 
       case LogicalOperator.NOT:
         return !this.childFilters[0].matches(note);
@@ -222,10 +229,14 @@ export class CompositeFilter extends FilterInterface {
 
     switch (this.config.operator) {
       case LogicalOperator.AND:
-        return this.childFilters.every(filter => filter.matchesWithContent(note));
+        return this.childFilters.every((filter) =>
+          filter.matchesWithContent(note)
+        );
 
       case LogicalOperator.OR:
-        return this.childFilters.some(filter => filter.matchesWithContent(note));
+        return this.childFilters.some((filter) =>
+          filter.matchesWithContent(note)
+        );
 
       case LogicalOperator.NOT:
         return !this.childFilters[0].matchesWithContent(note);

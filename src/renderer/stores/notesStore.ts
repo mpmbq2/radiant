@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
 import { withLoading } from '../utils/withLoading';
+import { unwrapIPCResponse } from '../utils/ipcHelpers';
 import type { NoteWithContent } from '../../types';
 import type { FilterInterface } from '../../filters';
 import { registerBuiltInFilters } from '../../filters';
@@ -61,7 +62,8 @@ export const notesStore = createStore<NotesState>((set, get) => ({
     await withLoading(
       set,
       async () => {
-        const notes = await window.electronAPI.notes.getAll();
+        const response = await window.electronAPI.notes.getAll();
+        const notes = unwrapIPCResponse(response);
         set({ notes });
       },
       'Load notes'
@@ -73,11 +75,12 @@ export const notesStore = createStore<NotesState>((set, get) => ({
     await withLoading(
       set,
       async () => {
-        const newNote = await window.electronAPI.notes.create({
+        const response = await window.electronAPI.notes.create({
           title,
           content,
           tags,
         });
+        const newNote = unwrapIPCResponse(response);
         set((state) => ({
           notes: [newNote, ...state.notes],
           currentNoteId: newNote.id,
@@ -94,7 +97,8 @@ export const notesStore = createStore<NotesState>((set, get) => ({
     await withLoading(
       set,
       async () => {
-        const note = await window.electronAPI.notes.getById(noteId);
+        const response = await window.electronAPI.notes.getById(noteId);
+        const note = unwrapIPCResponse(response);
         set({
           currentNoteId: noteId,
           currentNote: note,
@@ -109,10 +113,11 @@ export const notesStore = createStore<NotesState>((set, get) => ({
     await withLoading(
       set,
       async () => {
-        const updatedNote = await window.electronAPI.notes.update({
+        const response = await window.electronAPI.notes.update({
           id: noteId,
           ...updates,
         });
+        const updatedNote = unwrapIPCResponse(response);
 
         if (updatedNote) {
           set((state) => ({
@@ -132,7 +137,8 @@ export const notesStore = createStore<NotesState>((set, get) => ({
     await withLoading(
       set,
       async () => {
-        await window.electronAPI.notes.delete(noteId);
+        const response = await window.electronAPI.notes.delete(noteId);
+        unwrapIPCResponse(response);
         set((state) => ({
           notes: state.notes.filter((n) => n.id !== noteId),
           currentNoteId:

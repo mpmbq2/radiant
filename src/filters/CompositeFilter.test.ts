@@ -2,7 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { CompositeFilter } from './CompositeFilter';
 import { TagFilter } from './TagFilter';
 import { DateRangeFilter } from './DateRangeFilter';
-import { LogicalOperator, FilterType, DateField, DateRangePreset } from './types';
+import {
+  LogicalOperator,
+  FilterType,
+  DateField,
+  DateRangePreset,
+} from './types';
 import type { Note } from '../types';
 
 describe('CompositeFilter', () => {
@@ -102,7 +107,7 @@ describe('CompositeFilter', () => {
 
       const result = composite.apply(notes);
       expect(result).toHaveLength(2);
-      expect(result.map(n => n.id)).toEqual(['1', '2']);
+      expect(result.map((n) => n.id)).toEqual(['1', '2']);
     });
   });
 
@@ -128,7 +133,7 @@ describe('CompositeFilter', () => {
 
       const result = composite.apply(notes);
       expect(result).toHaveLength(2);
-      expect(result.map(n => n.id)).toEqual(['1', '2']);
+      expect(result.map((n) => n.id)).toEqual(['1', '2']);
     });
   });
 
@@ -150,7 +155,7 @@ describe('CompositeFilter', () => {
 
       const result = composite.apply(notes);
       expect(result).toHaveLength(2);
-      expect(result.map(n => n.id)).toEqual(['2', '3']);
+      expect(result.map((n) => n.id)).toEqual(['2', '3']);
     });
   });
 

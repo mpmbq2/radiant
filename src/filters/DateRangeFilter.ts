@@ -62,7 +62,9 @@ export class DateRangeFilter extends FilterInterface {
   readonly filterType = FilterType.DATE_RANGE;
   private config: DateRangeFilterConfig;
 
-  constructor(config: Omit<DateRangeFilterConfig, 'type'> | DateRangeFilterConfig) {
+  constructor(
+    config: Omit<DateRangeFilterConfig, 'type'> | DateRangeFilterConfig
+  ) {
     super();
     this.config = {
       type: FilterType.DATE_RANGE,
@@ -71,11 +73,11 @@ export class DateRangeFilter extends FilterInterface {
   }
 
   apply(notes: Note[]): Note[] {
-    return notes.filter(note => this.matches(note));
+    return notes.filter((note) => this.matches(note));
   }
 
   applyWithContent(notes: NoteWithContent[]): NoteWithContent[] {
-    return notes.filter(note => this.matchesWithContent(note));
+    return notes.filter((note) => this.matchesWithContent(note));
   }
 
   serialize(): FilterConfig {
@@ -96,12 +98,21 @@ export class DateRangeFilter extends FilterInterface {
     }
 
     // Must have either preset OR custom range
-    if (!this.config.preset && this.config.start === undefined && this.config.end === undefined) {
-      errors.push('Either preset or custom range (start/end) must be specified');
+    if (
+      !this.config.preset &&
+      this.config.start === undefined &&
+      this.config.end === undefined
+    ) {
+      errors.push(
+        'Either preset or custom range (start/end) must be specified'
+      );
     }
 
     // If using custom range, validate timestamps
-    if (this.config.start !== undefined && !Number.isFinite(this.config.start)) {
+    if (
+      this.config.start !== undefined &&
+      !Number.isFinite(this.config.start)
+    ) {
       errors.push('Start timestamp must be a finite number');
     }
 
@@ -118,7 +129,9 @@ export class DateRangeFilter extends FilterInterface {
       errors.push('Start date must be before or equal to end date');
     }
 
-    return errors.length === 0 ? validationSuccess() : validationFailure(errors);
+    return errors.length === 0
+      ? validationSuccess()
+      : validationFailure(errors);
   }
 
   getDescription(): string {
@@ -153,17 +166,19 @@ export class DateRangeFilter extends FilterInterface {
   }
 
   matches(note: Note): boolean {
-    const timestamp = this.config.field === DateField.CREATED_AT
-      ? note.created_at
-      : note.modified_at;
+    const timestamp =
+      this.config.field === DateField.CREATED_AT
+        ? note.created_at
+        : note.modified_at;
 
     return this.isInRange(timestamp);
   }
 
   matchesWithContent(note: NoteWithContent): boolean {
-    const timestamp = this.config.field === DateField.CREATED_AT
-      ? note.created_at
-      : note.modified_at;
+    const timestamp =
+      this.config.field === DateField.CREATED_AT
+        ? note.created_at
+        : note.modified_at;
 
     return this.isInRange(timestamp);
   }
@@ -204,7 +219,10 @@ export class DateRangeFilter extends FilterInterface {
   /**
    * Calculate timestamp range for a preset
    */
-  private calculatePresetRange(preset: DateRangePreset): { start?: number; end?: number } {
+  private calculatePresetRange(preset: DateRangePreset): {
+    start?: number;
+    end?: number;
+  } {
     const now = Date.now();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -259,7 +277,11 @@ export class DateRangeFilter extends FilterInterface {
       }
 
       case DateRangePreset.LAST_MONTH: {
-        const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastMonthStart = new Date(
+          today.getFullYear(),
+          today.getMonth() - 1,
+          1
+        );
         const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 1);
         return {
           start: Math.floor(lastMonthStart.getTime() / 1000),

@@ -11,7 +11,18 @@ import { TagFilter } from './TagFilter';
 import { DateRangeFilter } from './DateRangeFilter';
 import { ContentFilter } from './ContentFilter';
 import { CompositeFilter } from './CompositeFilter';
-import { FilterType, DateRangePreset, DateField, ComparisonOperator } from './types';
+import {
+  FilterType,
+  DateRangePreset,
+  DateField,
+  ComparisonOperator,
+} from './types';
+import {
+  validateTagFilterConfig,
+  validateDateRangeFilterConfig,
+  validateContentFilterConfig,
+  validateCompositeFilterConfig,
+} from './configSchemas';
 
 /**
  * Register all built-in filter types with the global filter registry
@@ -19,16 +30,13 @@ import { FilterType, DateRangePreset, DateField, ComparisonOperator } from './ty
  */
 export function registerBuiltInFilters(): void {
   // Register TagFilter
-  filterRegistry.register(
-    FilterType.TAG,
-    (config) => new TagFilter(config),
-    {
-      displayName: 'Tag Filter',
-      description: 'Filter notes by tags with AND/OR logic and exclusions',
-      category: 'Basic',
-      example: { type: FilterType.TAG, tags: ['work'] },
-    }
-  );
+  filterRegistry.register(FilterType.TAG, (config) => new TagFilter(config), {
+    displayName: 'Tag Filter',
+    description: 'Filter notes by tags with AND/OR logic and exclusions',
+    category: 'Basic',
+    example: { type: FilterType.TAG, tags: ['work'] },
+    configSchema: validateTagFilterConfig,
+  });
 
   // Register DateRangeFilter
   filterRegistry.register(
@@ -43,6 +51,7 @@ export function registerBuiltInFilters(): void {
         field: DateField.CREATED_AT,
         preset: DateRangePreset.LAST_7_DAYS,
       },
+      configSchema: validateDateRangeFilterConfig,
     }
   );
 
@@ -59,6 +68,7 @@ export function registerBuiltInFilters(): void {
         query: 'important',
         operator: ComparisonOperator.CONTAINS,
       },
+      configSchema: validateContentFilterConfig,
     }
   );
 
@@ -87,6 +97,7 @@ export function registerBuiltInFilters(): void {
           },
         ],
       },
+      configSchema: validateCompositeFilterConfig,
     }
   );
 }

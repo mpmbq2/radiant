@@ -58,7 +58,7 @@ export class NotesService {
 
     // Set tags if provided
     if (input.tags && input.tags.length > 0) {
-      this.tagsRepo.setTagsForNote(noteId, input.tags);
+      await this.tagsRepo.setTagsForNote(noteId, input.tags);
     }
 
     // Calculate word count
@@ -104,7 +104,28 @@ export class NotesService {
    */
   async getAllNotes(): Promise<NoteWithContent[]> {
     const notes = this.notesRepo.getAllNotes();
-    return notes.map((note) => this.enrichNoteWithContent(note));
+    const enrichedNotes: NoteWithContent[] = [];
+
+    for (const note of notes) {
+      try {
+        enrichedNotes.push(this.enrichNoteWithContent(note));
+      } catch (error) {
+        // Log the error but continue loading other notes
+        // This allows partial recovery when individual note files are corrupted
+        if (error instanceof Error) {
+          logger.warn(
+            `Skipping note ${note.id} due to read error: ${error.message}`,
+            error
+          );
+        } else {
+          logger.warn(
+            `Skipping note ${note.id} due to read error: ${String(error)}`
+          );
+        }
+      }
+    }
+
+    return enrichedNotes;
   }
 
   /**
@@ -151,7 +172,7 @@ export class NotesService {
 
     // Update tags if provided
     if (input.tags !== undefined) {
-      this.tagsRepo.setTagsForNote(input.id, input.tags);
+      await this.tagsRepo.setTagsForNote(input.id, input.tags);
     }
 
     // Update database
@@ -184,37 +205,43 @@ export class NotesService {
    */
   async searchNotes(query: string): Promise<NoteWithContent[]> {
     const notes = this.notesRepo.searchNotesByTitle(query);
-    return notes.map((note) => this.enrichNoteWithContent(note));
+    const enrichedNotes: NoteWithContent[] = [];
+
+    for (const note of notes) {
+      try {
+        enrichedNotes.push(this.enrichNoteWithContent(note));
+      } catch (error) {
+        // Log the error but continue loading other notes
+        // This allows partial recovery when individual note files are corrupted
+        if (error instanceof Error) {
+          logger.warn(
+            `Skipping note ${note.id} in search results due to read error: ${error.message}`,
+            error
+          );
+        } else {
+          logger.warn(
+            `Skipping note ${note.id} in search results due to read error: ${String(error)}`
+          );
+        }
+      }
+    }
+
+    return enrichedNotes;
   }
 
   /**
    * Helper: Enrich a note with content and tags from file system
+   * Throws if the note file cannot be read - caller must handle the error
    */
   private enrichNoteWithContent(note: Note): NoteWithContent {
-    try {
-      const { content } = fileManager.readNote(note.file_path);
-      const tags = this.tagsRepo.getTagsForNote(note.id);
+    const { content } = fileManager.readNote(note.file_path);
+    const tags = this.tagsRepo.getTagsForNote(note.id);
 
-      return {
-        ...note,
-        content,
-        tags,
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        logger.error(`Error reading note ${note.id}:`, error);
-      } else {
-        logger.error(
-          `Error reading note ${note.id}:`,
-          new Error(String(error))
-        );
-      }
-      return {
-        ...note,
-        content: '',
-        tags: [],
-      };
-    }
+    return {
+      ...note,
+      content,
+      tags,
+    };
   }
 
   /**

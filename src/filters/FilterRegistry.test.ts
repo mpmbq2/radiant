@@ -1,8 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FilterRegistry } from './FilterRegistry';
 import { TagFilter } from './TagFilter';
-import { FilterType } from './types';
-import type { FilterConfig, FilterInterface } from './FilterInterface';
+import { DateRangeFilter } from './DateRangeFilter';
+import { ContentFilter } from './ContentFilter';
+import { FilterType, DateField, ComparisonOperator } from './types';
+import type { FilterConfig } from './FilterInterface';
+import {
+  validateTagFilterConfig,
+  validateDateRangeFilterConfig,
+  validateContentFilterConfig,
+} from './configSchemas';
 
 describe('FilterRegistry', () => {
   let registry: FilterRegistry;
@@ -125,7 +132,9 @@ describe('FilterRegistry', () => {
 
       expect(() => {
         registry.createFromConfig(config);
-      }).toThrow('Filter configuration "type" must be a string, received number');
+      }).toThrow(
+        'Filter configuration "type" must be a string, received number'
+      );
     });
 
     it('should throw error for empty string type', () => {
@@ -180,7 +189,10 @@ describe('FilterRegistry', () => {
 
     it('should return all registered types', () => {
       registry.register(FilterType.TAG, (config) => new TagFilter(config));
-      registry.register(FilterType.DATE_RANGE, (config) => new TagFilter(config)); // Mock
+      registry.register(
+        FilterType.DATE_RANGE,
+        (config) => new TagFilter(config)
+      ); // Mock
 
       const types = registry.getAvailableTypes();
       expect(types).toHaveLength(2);
@@ -192,7 +204,10 @@ describe('FilterRegistry', () => {
   describe('clear', () => {
     it('should clear all registered filters', () => {
       registry.register(FilterType.TAG, (config) => new TagFilter(config));
-      registry.register(FilterType.DATE_RANGE, (config) => new TagFilter(config));
+      registry.register(
+        FilterType.DATE_RANGE,
+        (config) => new TagFilter(config)
+      );
 
       registry.clear();
 
@@ -206,14 +221,400 @@ describe('FilterRegistry', () => {
       const metadata1 = { displayName: 'Tag', description: 'Tag filter' };
       const metadata2 = { displayName: 'Date', description: 'Date filter' };
 
-      registry.register(FilterType.TAG, (config) => new TagFilter(config), metadata1);
-      registry.register(FilterType.DATE_RANGE, (config) => new TagFilter(config), metadata2);
+      registry.register(
+        FilterType.TAG,
+        (config) => new TagFilter(config),
+        metadata1
+      );
+      registry.register(
+        FilterType.DATE_RANGE,
+        (config) => new TagFilter(config),
+        metadata2
+      );
 
       const allMetadata = registry.getAllMetadata();
 
       expect(allMetadata.size).toBe(2);
       expect(allMetadata.get(FilterType.TAG)).toEqual(metadata1);
       expect(allMetadata.get(FilterType.DATE_RANGE)).toEqual(metadata2);
+    });
+  });
+
+  describe('Config Schema Validation', () => {
+    describe('validates configs BEFORE filter creation', () => {
+      it('should reject invalid TagFilter config before constructor runs', () => {
+        // Register with schema validator
+        const factorySpy = vi.fn((config) => new TagFilter(config));
+        registry.register(FilterType.TAG, factorySpy, {
+          displayName: 'Tag Filter',
+          description: 'Filter by tags',
+          configSchema: validateTagFilterConfig,
+        });
+
+        const invalidConfig = {
+          type: FilterType.TAG,
+          tags: [], // Invalid - empty array
+        };
+
+        // Should throw before calling factory
+        expect(() => {
+          registry.createFromConfig(invalidConfig);
+        }).toThrow('Invalid configuration for TAG filter');
+
+        // Factory should NEVER be called for invalid configs
+        expect(factorySpy).not.toHaveBeenCalled();
+      });
+
+      it('should reject invalid DateRangeFilter config before constructor runs', () => {
+        const factorySpy = vi.fn((config) => new DateRangeFilter(config));
+        registry.register(FilterType.DATE_RANGE, factorySpy, {
+          displayName: 'Date Range Filter',
+          description: 'Filter by date',
+          configSchema: validateDateRangeFilterConfig,
+        });
+
+        const invalidConfig = {
+          type: FilterType.DATE_RANGE,
+          // Missing required 'field' property
+        };
+
+        expect(() => {
+          registry.createFromConfig(invalidConfig);
+        }).toThrow('Invalid configuration for DATE_RANGE filter');
+
+        // Factory should NEVER be called for invalid configs
+        expect(factorySpy).not.toHaveBeenCalled();
+      });
+
+      it('should reject invalid ContentFilter config before constructor runs', () => {
+        const factorySpy = vi.fn((config) => new ContentFilter(config));
+        registry.register(FilterType.CONTENT, factorySpy, {
+          displayName: 'Content Filter',
+          description: 'Filter by content',
+          configSchema: validateContentFilterConfig,
+        });
+
+        const invalidConfig = {
+          type: FilterType.CONTENT,
+          // Missing required 'query' or 'pattern'
+        };
+
+        expect(() => {
+          registry.createFromConfig(invalidConfig);
+        }).toThrow('Invalid configuration for CONTENT filter');
+
+        // Factory should NEVER be called for invalid configs
+        expect(factorySpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('TagFilter schema validation', () => {
+      beforeEach(() => {
+        registry.register(FilterType.TAG, (config) => new TagFilter(config), {
+          displayName: 'Tag Filter',
+          description: 'Filter by tags',
+          configSchema: validateTagFilterConfig,
+        });
+      });
+
+      it('should reject config with empty tags array', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.TAG,
+            tags: [],
+          });
+        }).toThrow('At least one tag or excludeTag must be specified');
+      });
+
+      it('should reject config with non-array tags', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.TAG,
+            tags: 'work' as any,
+          });
+        }).toThrow('tags: Must be an array');
+      });
+
+      it('should reject config with empty string tags', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.TAG,
+            tags: ['work', ''],
+          });
+        }).toThrow('tags: All tags must be non-empty strings');
+      });
+
+      it('should reject config with non-string tags', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.TAG,
+            tags: ['work', 123 as any],
+          });
+        }).toThrow('tags: All tags must be non-empty strings');
+      });
+
+      it('should reject config with invalid operator', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.TAG,
+            tags: ['work'],
+            operator: 'INVALID' as any,
+          });
+        }).toThrow('operator: Must be AND or OR for TagFilter');
+      });
+
+      it('should reject config with non-boolean caseSensitive', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.TAG,
+            tags: ['work'],
+            caseSensitive: 'true' as any,
+          });
+        }).toThrow('caseSensitive: Must be a boolean');
+      });
+
+      it('should accept valid config with tags', () => {
+        const filter = registry.createFromConfig({
+          type: FilterType.TAG,
+          tags: ['work', 'urgent'],
+        });
+        expect(filter).toBeInstanceOf(TagFilter);
+      });
+
+      it('should accept valid config with excludeTags only', () => {
+        const filter = registry.createFromConfig({
+          type: FilterType.TAG,
+          excludeTags: ['archived'],
+        });
+        expect(filter).toBeInstanceOf(TagFilter);
+      });
+    });
+
+    describe('DateRangeFilter schema validation', () => {
+      beforeEach(() => {
+        registry.register(
+          FilterType.DATE_RANGE,
+          (config) => new DateRangeFilter(config),
+          {
+            displayName: 'Date Range Filter',
+            description: 'Filter by date',
+            configSchema: validateDateRangeFilterConfig,
+          }
+        );
+      });
+
+      it('should reject config without field', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.DATE_RANGE,
+            preset: 'LAST_7_DAYS',
+          } as any);
+        }).toThrow('field: Date field must be specified');
+      });
+
+      it('should reject config with invalid field', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.DATE_RANGE,
+            field: 'invalid_field' as any,
+            preset: 'LAST_7_DAYS',
+          });
+        }).toThrow('field: Must be either created_at or modified_at');
+      });
+
+      it('should reject config without preset or custom range', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.DATE_RANGE,
+            field: DateField.CREATED_AT,
+          });
+        }).toThrow(
+          'Either preset or custom range (start/end) must be specified'
+        );
+      });
+
+      it('should reject config with non-finite start', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.DATE_RANGE,
+            field: DateField.CREATED_AT,
+            start: NaN,
+          });
+        }).toThrow('start: Must be a finite number');
+      });
+
+      it('should reject config with non-finite end', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.DATE_RANGE,
+            field: DateField.CREATED_AT,
+            end: Infinity,
+          });
+        }).toThrow('end: Must be a finite number');
+      });
+
+      it('should reject config where start is after end', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.DATE_RANGE,
+            field: DateField.CREATED_AT,
+            start: 1000,
+            end: 500,
+          });
+        }).toThrow('start/end: Start date must be before or equal to end date');
+      });
+
+      it('should accept valid config with preset', () => {
+        const filter = registry.createFromConfig({
+          type: FilterType.DATE_RANGE,
+          field: DateField.CREATED_AT,
+          preset: 'LAST_7_DAYS',
+        });
+        expect(filter).toBeInstanceOf(DateRangeFilter);
+      });
+
+      it('should accept valid config with custom range', () => {
+        const filter = registry.createFromConfig({
+          type: FilterType.DATE_RANGE,
+          field: DateField.MODIFIED_AT,
+          start: 500,
+          end: 1000,
+        });
+        expect(filter).toBeInstanceOf(DateRangeFilter);
+      });
+    });
+
+    describe('ContentFilter schema validation', () => {
+      beforeEach(() => {
+        registry.register(
+          FilterType.CONTENT,
+          (config) => new ContentFilter(config),
+          {
+            displayName: 'Content Filter',
+            description: 'Filter by content',
+            configSchema: validateContentFilterConfig,
+          }
+        );
+      });
+
+      it('should reject config without query or pattern', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.CONTENT,
+          });
+        }).toThrow('Either query or pattern must be specified');
+      });
+
+      it('should reject config with non-string query', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.CONTENT,
+            query: 123 as any,
+          });
+        }).toThrow('query: Must be a string');
+      });
+
+      it('should reject config with empty query', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.CONTENT,
+            query: '   ',
+          });
+        }).toThrow('query: Must be a non-empty string');
+      });
+
+      it('should reject config with non-string pattern', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.CONTENT,
+            pattern: ['regex'] as any,
+          });
+        }).toThrow('pattern: Must be a string');
+      });
+
+      it('should reject config with both search fields disabled', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.CONTENT,
+            query: 'test',
+            searchTitle: false,
+            searchContent: false,
+          });
+        }).toThrow('At least one of searchTitle or searchContent must be true');
+      });
+
+      it('should reject config with non-boolean searchTitle', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.CONTENT,
+            query: 'test',
+            searchTitle: 'true' as any,
+          });
+        }).toThrow('searchTitle: Must be a boolean');
+      });
+
+      it('should reject config with invalid regex pattern', () => {
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.CONTENT,
+            pattern: '[invalid(',
+            operator: ComparisonOperator.MATCHES_REGEX,
+          });
+        }).toThrow('Invalid regex pattern');
+      });
+
+      it('should accept valid config with query', () => {
+        const filter = registry.createFromConfig({
+          type: FilterType.CONTENT,
+          query: 'important',
+        });
+        expect(filter).toBeInstanceOf(ContentFilter);
+      });
+
+      it('should accept valid config with pattern', () => {
+        const filter = registry.createFromConfig({
+          type: FilterType.CONTENT,
+          pattern: 'TODO: .*',
+          operator: ComparisonOperator.MATCHES_REGEX,
+        });
+        expect(filter).toBeInstanceOf(ContentFilter);
+      });
+    });
+
+    describe('filters without schema', () => {
+      it('should allow filter creation when no schema is registered', () => {
+        // Register without schema
+        registry.register(FilterType.TAG, (config) => new TagFilter(config), {
+          displayName: 'Tag Filter',
+          description: 'Filter by tags',
+          // No configSchema
+        });
+
+        // Should still work (no schema validation, only basic + filter.validate())
+        const filter = registry.createFromConfig({
+          type: FilterType.TAG,
+          tags: ['work'],
+        });
+
+        expect(filter).toBeInstanceOf(TagFilter);
+      });
+
+      it('should still reject if filter.validate() fails even without schema', () => {
+        // Register without schema
+        registry.register(FilterType.TAG, (config) => new TagFilter(config), {
+          displayName: 'Tag Filter',
+          description: 'Filter by tags',
+          // No configSchema
+        });
+
+        // Should fail at filter.validate() stage
+        expect(() => {
+          registry.createFromConfig({
+            type: FilterType.TAG,
+            tags: [], // Invalid
+          });
+        }).toThrow('Filter validation failed');
+      });
     });
   });
 });

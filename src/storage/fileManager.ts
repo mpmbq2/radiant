@@ -4,6 +4,12 @@ import matter from 'gray-matter';
 import { CONFIG } from '../config';
 import { createLogger } from '../utils/logger';
 import type { NoteFrontmatter } from '../types';
+import {
+  validateNoteId,
+  validateFilePath,
+  validateNoteContent,
+  ValidationError,
+} from '../utils/validation';
 
 const logger = createLogger('FileManager');
 
@@ -51,7 +57,8 @@ export class FileSystemError extends Error {
       [FileSystemErrorCode.MKDIR_FAILED]: `Directory creation failed: Cannot create directory at "${filePath}".`,
     };
 
-    const baseMessage = messages[code] || messages[FileSystemErrorCode.UNKNOWN_ERROR];
+    const baseMessage =
+      messages[code] || messages[FileSystemErrorCode.UNKNOWN_ERROR];
     const details = originalError ? ` Details: ${originalError.message}` : '';
     return `${baseMessage}${details}`;
   }
@@ -122,8 +129,16 @@ export class FileManager {
    * Generate a file path for a note
    */
   generateFilePath(noteId: string): string {
+    // Validate note ID to prevent path traversal
+    validateNoteId(noteId);
+
     this.ensureNotesDirectory();
-    return path.join(this.getNotesDir(), `${noteId}.md`);
+    const filePath = path.join(this.getNotesDir(), `${noteId}.md`);
+
+    // Validate the generated path
+    validateFilePath(filePath, this.getNotesDir());
+
+    return filePath;
   }
 
   /**
@@ -137,11 +152,38 @@ export class FileManager {
     this.ensureNotesDirectory();
 
     try {
-      // Validate path before writing
-      if (!path.isAbsolute(filePath)) {
-        throw new FileSystemError(
-          FileSystemErrorCode.INVALID_PATH,
-          filePath
+      // Validate inputs
+      validateFilePath(filePath, this.getNotesDir());
+      validateNoteContent(content);
+
+      // Validate frontmatter
+      if (!frontmatter || typeof frontmatter !== 'object') {
+        throw new ValidationError('Frontmatter must be a valid object');
+      }
+
+      if (typeof frontmatter.title !== 'string' || !frontmatter.title.trim()) {
+        throw new ValidationError('Frontmatter must include a valid title');
+      }
+
+      if (!Array.isArray(frontmatter.tags)) {
+        throw new ValidationError('Frontmatter tags must be an array');
+      }
+
+      if (
+        typeof frontmatter.created_at !== 'number' ||
+        frontmatter.created_at < 0
+      ) {
+        throw new ValidationError(
+          'Frontmatter must include a valid created_at timestamp'
+        );
+      }
+
+      if (
+        typeof frontmatter.modified_at !== 'number' ||
+        frontmatter.modified_at < 0
+      ) {
+        throw new ValidationError(
+          'Frontmatter must include a valid modified_at timestamp'
         );
       }
 
@@ -149,8 +191,11 @@ export class FileManager {
       fs.writeFileSync(filePath, fileContent, 'utf-8');
       logger.info(`Note written to: ${filePath}`);
     } catch (error) {
-      // If it's already a FileSystemError, re-throw it
-      if (error instanceof FileSystemError) {
+      // If it's already a FileSystemError or ValidationError, re-throw it
+      if (
+        error instanceof FileSystemError ||
+        error instanceof ValidationError
+      ) {
         throw error;
       }
 
@@ -169,11 +214,11 @@ export class FileManager {
     frontmatter: NoteFrontmatter;
   } {
     try {
+      // Validate file path
+      validateFilePath(filePath, this.getNotesDir());
+
       if (!fs.existsSync(filePath)) {
-        throw new FileSystemError(
-          FileSystemErrorCode.FILE_NOT_FOUND,
-          filePath
-        );
+        throw new FileSystemError(FileSystemErrorCode.FILE_NOT_FOUND, filePath);
       }
 
       const fileContent = fs.readFileSync(filePath, 'utf-8');
@@ -184,8 +229,11 @@ export class FileManager {
         frontmatter: parsed.data as NoteFrontmatter,
       };
     } catch (error) {
-      // If it's already a FileSystemError, re-throw it
-      if (error instanceof FileSystemError) {
+      // If it's already a FileSystemError or ValidationError, re-throw it
+      if (
+        error instanceof FileSystemError ||
+        error instanceof ValidationError
+      ) {
         throw error;
       }
 
@@ -212,18 +260,21 @@ export class FileManager {
    */
   deleteNote(filePath: string): void {
     try {
+      // Validate file path
+      validateFilePath(filePath, this.getNotesDir());
+
       if (!fs.existsSync(filePath)) {
-        throw new FileSystemError(
-          FileSystemErrorCode.FILE_NOT_FOUND,
-          filePath
-        );
+        throw new FileSystemError(FileSystemErrorCode.FILE_NOT_FOUND, filePath);
       }
 
       fs.unlinkSync(filePath);
       logger.info(`Note deleted: ${filePath}`);
     } catch (error) {
-      // If it's already a FileSystemError, re-throw it
-      if (error instanceof FileSystemError) {
+      // If it's already a FileSystemError or ValidationError, re-throw it
+      if (
+        error instanceof FileSystemError ||
+        error instanceof ValidationError
+      ) {
         throw error;
       }
 

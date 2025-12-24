@@ -75,9 +75,11 @@ export class ContentFilter extends FilterInterface {
     this.config = {
       type: FilterType.CONTENT,
       operator: config.operator || ComparisonOperator.CONTAINS,
-      caseSensitive: config.caseSensitive !== undefined ? config.caseSensitive : false,
+      caseSensitive:
+        config.caseSensitive !== undefined ? config.caseSensitive : false,
       searchTitle: config.searchTitle !== undefined ? config.searchTitle : true,
-      searchContent: config.searchContent !== undefined ? config.searchContent : true,
+      searchContent:
+        config.searchContent !== undefined ? config.searchContent : true,
       ...config,
     };
 
@@ -101,11 +103,11 @@ export class ContentFilter extends FilterInterface {
     if (!this.config.searchTitle) {
       return []; // Can't filter without content
     }
-    return notes.filter(note => this.matchesTitle(note.title));
+    return notes.filter((note) => this.matchesTitle(note.title));
   }
 
   applyWithContent(notes: NoteWithContent[]): NoteWithContent[] {
-    return notes.filter(note => this.matchesWithContent(note));
+    return notes.filter((note) => this.matchesWithContent(note));
   }
 
   serialize(): FilterConfig {
@@ -121,12 +123,18 @@ export class ContentFilter extends FilterInterface {
     }
 
     // Query must be non-empty
-    if (this.config.query !== undefined && this.config.query.trim().length === 0) {
+    if (
+      this.config.query !== undefined &&
+      this.config.query.trim().length === 0
+    ) {
       errors.push('Query must be a non-empty string');
     }
 
     // Pattern must be non-empty
-    if (this.config.pattern !== undefined && this.config.pattern.trim().length === 0) {
+    if (
+      this.config.pattern !== undefined &&
+      this.config.pattern.trim().length === 0
+    ) {
       errors.push('Pattern must be a non-empty string');
     }
 
@@ -149,7 +157,9 @@ export class ContentFilter extends FilterInterface {
       }
     }
 
-    return errors.length === 0 ? validationSuccess() : validationFailure(errors);
+    return errors.length === 0
+      ? validationSuccess()
+      : validationFailure(errors);
   }
 
   getDescription(): string {
@@ -159,7 +169,8 @@ export class ContentFilter extends FilterInterface {
     if (this.config.searchTitle) fields.push('title');
     if (this.config.searchContent) fields.push('content');
 
-    const fieldStr = fields.length === 2 ? 'title or content' : fields[0] || 'title';
+    const fieldStr =
+      fields.length === 2 ? 'title or content' : fields[0] || 'title';
     const operator = this.getOperatorDescription();
 
     return `Notes where ${fieldStr} ${operator} "${query}"`;
@@ -182,7 +193,8 @@ export class ContentFilter extends FilterInterface {
     const content = note.content || '';
 
     const titleMatches = this.config.searchTitle && this.matchesTitle(title);
-    const contentMatches = this.config.searchContent && this.matchesText(content);
+    const contentMatches =
+      this.config.searchContent && this.matchesText(content);
 
     // Return true if either field matches (OR logic)
     return titleMatches || contentMatches;
@@ -202,8 +214,12 @@ export class ContentFilter extends FilterInterface {
     const query = this.config.query || this.config.pattern || '';
 
     // Normalize for case-insensitive comparison
-    const normalizedText = this.config.caseSensitive ? text : text.toLowerCase();
-    const normalizedQuery = this.config.caseSensitive ? query : query.toLowerCase();
+    const normalizedText = this.config.caseSensitive
+      ? text
+      : text.toLowerCase();
+    const normalizedQuery = this.config.caseSensitive
+      ? query
+      : query.toLowerCase();
 
     switch (this.config.operator) {
       case ComparisonOperator.EQUALS:

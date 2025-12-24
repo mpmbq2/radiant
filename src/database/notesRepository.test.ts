@@ -33,7 +33,7 @@ describe('NotesRepository', () => {
 
   describe('createNote', () => {
     it('should create a new note with correct metadata', () => {
-      const noteId = 'test-note-1';
+      const noteId = '550e8400-e29b-41d4-a716-446655440001';
       const title = 'Test Note';
       const filePath = '/path/to/note.md';
 
@@ -53,7 +53,7 @@ describe('NotesRepository', () => {
     });
 
     it('should store the note in the database', () => {
-      const noteId = 'test-note-2';
+      const noteId = '550e8400-e29b-41d4-a716-446655440002';
       repository.createNote(noteId, 'Test Note', '/path/to/note.md');
 
       const retrieved = repository.getNoteById(noteId);
@@ -69,7 +69,7 @@ describe('NotesRepository', () => {
     });
 
     it('should retrieve an existing note', () => {
-      const noteId = 'test-note-3';
+      const noteId = '550e8400-e29b-41d4-a716-446655440003';
       repository.createNote(noteId, 'Test Note', '/path/to/note.md');
 
       const note = repository.getNoteById(noteId);
@@ -78,7 +78,7 @@ describe('NotesRepository', () => {
     });
 
     it('should not return deleted notes', () => {
-      const noteId = 'test-note-4';
+      const noteId = '550e8400-e29b-41d4-a716-446655440004';
       repository.createNote(noteId, 'Test Note', '/path/to/note.md');
       repository.deleteNote(noteId);
 
@@ -94,41 +94,71 @@ describe('NotesRepository', () => {
     });
 
     it('should return all non-deleted notes', () => {
-      repository.createNote('note-1', 'Note 1', '/path/1.md');
-      repository.createNote('note-2', 'Note 2', '/path/2.md');
-      repository.createNote('note-3', 'Note 3', '/path/3.md');
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440001',
+        'Note 1',
+        '/path/1.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440002',
+        'Note 2',
+        '/path/2.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440003',
+        'Note 3',
+        '/path/3.md'
+      );
 
       const notes = repository.getAllNotes();
       expect(notes).toHaveLength(3);
     });
 
     it('should not include deleted notes', () => {
-      repository.createNote('note-1', 'Note 1', '/path/1.md');
-      repository.createNote('note-2', 'Note 2', '/path/2.md');
-      repository.deleteNote('note-2');
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440001',
+        'Note 1',
+        '/path/1.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440002',
+        'Note 2',
+        '/path/2.md'
+      );
+      repository.deleteNote('650e8400-e29b-41d4-a716-446655440002');
 
       const notes = repository.getAllNotes();
       expect(notes).toHaveLength(1);
-      expect(notes[0].id).toBe('note-1');
+      expect(notes[0].id).toBe('650e8400-e29b-41d4-a716-446655440001');
     });
 
     it('should order notes by modified_at descending', () => {
       // Create notes with slight time delay to ensure different timestamps
-      const note1 = repository.createNote('note-1', 'Note 1', '/path/1.md');
-      const note2 = repository.createNote('note-2', 'Note 2', '/path/2.md');
+      const note1 = repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440001',
+        'Note 1',
+        '/path/1.md'
+      );
+      const note2 = repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440002',
+        'Note 2',
+        '/path/2.md'
+      );
 
       // Update note 1 to make it most recent
-      repository.updateNote('note-1', { title: 'Updated Note 1' });
+      repository.updateNote('650e8400-e29b-41d4-a716-446655440001', {
+        title: 'Updated Note 1',
+      });
 
       const notes = repository.getAllNotes();
-      expect(notes[0].id).toBe('note-1');
-      expect(notes[1].id).toBe('note-2');
+      expect(notes[0].id).toBe('650e8400-e29b-41d4-a716-446655440001');
+      expect(notes[1].id).toBe('650e8400-e29b-41d4-a716-446655440002');
     });
   });
 
   describe('updateNote', () => {
     it('should update note title', () => {
-      const noteId = 'test-note-5';
+      const noteId = '550e8400-e29b-41d4-a716-446655440005';
       repository.createNote(noteId, 'Original Title', '/path/to/note.md');
 
       repository.updateNote(noteId, { title: 'Updated Title' });
@@ -138,7 +168,7 @@ describe('NotesRepository', () => {
     });
 
     it('should update word count', () => {
-      const noteId = 'test-note-6';
+      const noteId = '550e8400-e29b-41d4-a716-446655440006';
       repository.createNote(noteId, 'Test Note', '/path/to/note.md');
 
       repository.updateNote(noteId, { word_count: 42 });
@@ -148,7 +178,7 @@ describe('NotesRepository', () => {
     });
 
     it('should update character count', () => {
-      const noteId = 'test-note-7';
+      const noteId = '550e8400-e29b-41d4-a716-446655440007';
       repository.createNote(noteId, 'Test Note', '/path/to/note.md');
 
       repository.updateNote(noteId, { character_count: 100 });
@@ -158,7 +188,7 @@ describe('NotesRepository', () => {
     });
 
     it('should update modified_at timestamp', () => {
-      const noteId = 'test-note-8';
+      const noteId = '550e8400-e29b-41d4-a716-446655440008';
       const created = repository.createNote(
         noteId,
         'Test Note',
@@ -176,7 +206,7 @@ describe('NotesRepository', () => {
     });
 
     it('should update multiple fields at once', () => {
-      const noteId = 'test-note-9';
+      const noteId = '550e8400-e29b-41d4-a716-446655440009';
       repository.createNote(noteId, 'Test Note', '/path/to/note.md');
 
       repository.updateNote(noteId, {
@@ -194,7 +224,7 @@ describe('NotesRepository', () => {
 
   describe('deleteNote', () => {
     it('should soft delete a note', () => {
-      const noteId = 'test-note-10';
+      const noteId = '550e8400-e29b-41d4-a716-44665544000a';
       repository.createNote(noteId, 'Test Note', '/path/to/note.md');
 
       repository.deleteNote(noteId);
@@ -237,9 +267,21 @@ describe('NotesRepository', () => {
 
   describe('searchNotesByTitle', () => {
     beforeEach(() => {
-      repository.createNote('note-1', 'JavaScript Tutorial', '/path/1.md');
-      repository.createNote('note-2', 'TypeScript Guide', '/path/2.md');
-      repository.createNote('note-3', 'Script Writing Tips', '/path/3.md');
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440001',
+        'JavaScript Tutorial',
+        '/path/1.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440002',
+        'TypeScript Guide',
+        '/path/2.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440003',
+        'Script Writing Tips',
+        '/path/3.md'
+      );
     });
 
     it('should find notes matching query', () => {
@@ -265,7 +307,7 @@ describe('NotesRepository', () => {
     });
 
     it('should not return deleted notes in search', () => {
-      repository.deleteNote('note-1');
+      repository.deleteNote('650e8400-e29b-41d4-a716-446655440001');
       const results = repository.searchNotesByTitle('JavaScript');
       expect(results).toEqual([]);
     });

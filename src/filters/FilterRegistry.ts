@@ -1,5 +1,8 @@
-import type { FilterInterface, FilterConfig, FilterFactory } from './FilterInterface';
-import { FilterType } from './types';
+import type {
+  FilterInterface,
+  FilterConfig,
+  FilterFactory,
+} from './FilterInterface';
 
 /**
  * Registry for dynamically creating filters from serialized configurations
@@ -27,7 +30,11 @@ export class FilterRegistry {
    * @param metadata - Optional metadata about the filter
    * @throws Error if type is already registered
    */
-  register(type: string, factory: FilterFactory, metadata?: FilterMetadata): void {
+  register(
+    type: string,
+    factory: FilterFactory,
+    metadata?: FilterMetadata
+  ): void {
     if (this.factories.has(type)) {
       throw new Error(`Filter type '${type}' is already registered`);
     }
@@ -59,7 +66,7 @@ export class FilterRegistry {
    * @throws Error if type is not registered or factory fails
    */
   createFromConfig(config: FilterConfig): FilterInterface {
-    // Validate config before attempting to create filter
+    // Validate basic config structure before attempting to create filter
     this.validateConfig(config);
 
     const { type } = config;
@@ -69,29 +76,26 @@ export class FilterRegistry {
     if (!factory) {
       throw new Error(
         `No factory registered for filter type '${type}'. ` +
-        `Available types: ${Array.from(this.factories.keys()).join(', ')}`
+          `Available types: ${Array.from(this.factories.keys()).join(', ')}`
       );
     }
 
-    try {
-      const filter = factory(config);
+    // Validate config schema BEFORE creating the filter instance
+    // This prevents invalid configs from executing constructor logic
+    this.validateConfigSchema(type, config);
 
-      // Validate the created filter
-      const validation = filter.validate();
-      if (!validation.isValid) {
-        throw new Error(
-          `Filter validation failed: ${validation.errors.join(', ')}`
-        );
-      }
+    // Create the filter instance (now guaranteed to have valid config)
+    const filter = factory(config);
 
-      return filter;
-    } catch (error) {
+    // Validate the created filter as a final safety check
+    const validation = filter.validate();
+    if (!validation.isValid) {
       throw new Error(
-        `Failed to create filter of type '${type}': ${
-          error instanceof Error ? error.message : String(error)
-        }`
+        `Filter validation failed: ${validation.errors.join(', ')}`
       );
     }
+
+    return filter;
   }
 
   /**
@@ -136,6 +140,36 @@ export class FilterRegistry {
     // Check if type is not empty
     if (type.trim().length === 0) {
       throw new Error('Filter configuration "type" cannot be an empty string');
+    }
+  }
+
+  /**
+   * Validate config against its schema BEFORE creating filter instance
+   * This prevents invalid configs from executing constructor logic
+   *
+   * @param type - Filter type identifier
+   * @param config - Filter configuration to validate
+   * @throws Error if config validation fails (preserves original stack trace)
+   * @private
+   */
+  private validateConfigSchema(type: string, config: FilterConfig): void {
+    const metadata = this.metadata.get(type);
+
+    // If no metadata or no schema validator, skip schema validation
+    if (!metadata || !metadata.configSchema) {
+      return;
+    }
+
+    // Run the schema validator
+    const result = metadata.configSchema(config);
+
+    // If validation failed, throw error with all validation messages
+    if (!result.isValid) {
+      // Throw a single error with all validation errors concatenated
+      // This preserves the original error messages without re-wrapping
+      throw new Error(
+        `Invalid configuration for ${type} filter: ${result.errors.join('; ')}`
+      );
     }
   }
 
@@ -194,6 +228,26 @@ export class FilterRegistry {
 }
 
 /**
+ * Result of config schema validation
+ */
+export interface ConfigValidationResult {
+  /** Whether the config is valid */
+  isValid: boolean;
+
+  /** Array of validation error messages */
+  errors: string[];
+}
+
+/**
+ * Function that validates a filter configuration before filter creation
+ * @param config - The configuration to validate
+ * @returns Validation result with any errors found
+ */
+export type ConfigSchemaValidator = (
+  config: FilterConfig
+) => ConfigValidationResult;
+
+/**
  * Metadata describing a filter type
  * Used for UI generation and documentation
  */
@@ -210,8 +264,8 @@ export interface FilterMetadata {
   /** Example configuration */
   example?: FilterConfig;
 
-  /** Schema for configuration validation (optional) */
-  configSchema?: any;
+  /** Schema validator for configuration validation (validates BEFORE filter creation) */
+  configSchema?: ConfigSchemaValidator;
 }
 
 /**
@@ -235,6 +289,6 @@ export const filterRegistry = new FilterRegistry();
 export function registerBuiltInFilters(): void {
   throw new Error(
     'registerBuiltInFilters() has been moved. ' +
-    "Import it from './registerFilters' instead of './FilterRegistry'"
+      "Import it from './registerFilters' instead of './FilterRegistry'"
   );
 }

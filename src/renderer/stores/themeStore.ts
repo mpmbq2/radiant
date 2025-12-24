@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
 import { withLoading } from '../utils/withLoading';
+import { unwrapIPCResponse } from '../utils/ipcHelpers';
 import type { CatppuccinFlavor } from '../themes/catppuccin';
 import { VALID_THEMES } from '../../config/themes';
 import { createLogger } from '../../utils/logger';
@@ -28,7 +29,8 @@ export const themeStore = createStore<ThemeState>((set, get) => ({
     await withLoading(
       set,
       async () => {
-        const theme = await window.electronAPI.getTheme();
+        const response = await window.electronAPI.getTheme();
+        const theme = unwrapIPCResponse(response);
 
         // Validate theme is a valid Catppuccin flavor
         if (VALID_THEMES.includes(theme as (typeof VALID_THEMES)[number])) {
@@ -50,7 +52,8 @@ export const themeStore = createStore<ThemeState>((set, get) => ({
     await withLoading(
       set,
       async () => {
-        await window.electronAPI.setTheme(theme);
+        const response = await window.electronAPI.setTheme(theme);
+        unwrapIPCResponse(response);
         set({ currentTheme: theme });
       },
       'Set theme',

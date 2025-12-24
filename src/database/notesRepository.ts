@@ -8,6 +8,14 @@ import type {
   UpdateNoteInput,
 } from '../types';
 import { createLogger } from '../utils/logger';
+import {
+  validateNoteId,
+  validateNoteTitle,
+  validatePositiveNumber,
+  validateFilePath,
+  ValidationError,
+} from '../utils/validation';
+import { CONFIG } from '../config';
 
 const logger = createLogger('NotesRepository');
 
@@ -23,6 +31,19 @@ export class NotesRepository {
    */
   createNote(noteId: string, title: string, filePath: string): Note {
     try {
+      // Validate inputs
+      validateNoteId(noteId);
+      validateNoteTitle(title);
+      validateFilePath(filePath, CONFIG.NOTES_DIR);
+
+      // Check for duplicate ID
+      const existing = this.getNoteById(noteId);
+      if (existing) {
+        throw new ValidationError(
+          `Note with ID ${noteId} already exists. Cannot create duplicate note.`
+        );
+      }
+
       const db = this.db;
       const now = Date.now();
 
@@ -47,7 +68,10 @@ export class NotesRepository {
       if (error instanceof Error) {
         logger.error('Error creating note in database:', error);
       } else {
-        logger.error('Error creating note in database:', new Error(String(error)));
+        logger.error(
+          'Error creating note in database:',
+          new Error(String(error))
+        );
       }
       throw error;
     }
@@ -58,6 +82,9 @@ export class NotesRepository {
    */
   getNoteById(noteId: string): Note | null {
     try {
+      // Validate input
+      validateNoteId(noteId);
+
       const stmt = this.db.prepare(
         'SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL'
       );
@@ -106,6 +133,20 @@ export class NotesRepository {
     }
   ): void {
     try {
+      // Validate noteId
+      validateNoteId(noteId);
+
+      // Validate updates
+      if (updates.title !== undefined) {
+        validateNoteTitle(updates.title);
+      }
+      if (updates.word_count !== undefined) {
+        validatePositiveNumber(updates.word_count, 'Word count');
+      }
+      if (updates.character_count !== undefined) {
+        validatePositiveNumber(updates.character_count, 'Character count');
+      }
+
       const now = Date.now();
 
       const fields: string[] = ['modified_at = ?'];
@@ -137,7 +178,10 @@ export class NotesRepository {
       if (error instanceof Error) {
         logger.error(`Error updating note ${noteId}:`, error);
       } else {
-        logger.error(`Error updating note ${noteId}:`, new Error(String(error)));
+        logger.error(
+          `Error updating note ${noteId}:`,
+          new Error(String(error))
+        );
       }
       throw error;
     }
@@ -148,15 +192,23 @@ export class NotesRepository {
    */
   deleteNote(noteId: string): void {
     try {
+      // Validate input
+      validateNoteId(noteId);
+
       const now = Date.now();
 
-      const stmt = this.db.prepare('UPDATE notes SET deleted_at = ? WHERE id = ?');
+      const stmt = this.db.prepare(
+        'UPDATE notes SET deleted_at = ? WHERE id = ?'
+      );
       stmt.run(now, noteId);
     } catch (error) {
       if (error instanceof Error) {
         logger.error(`Error deleting note ${noteId}:`, error);
       } else {
-        logger.error(`Error deleting note ${noteId}:`, new Error(String(error)));
+        logger.error(
+          `Error deleting note ${noteId}:`,
+          new Error(String(error))
+        );
       }
       throw error;
     }
@@ -167,13 +219,19 @@ export class NotesRepository {
    */
   permanentlyDeleteNote(noteId: string): void {
     try {
+      // Validate input
+      validateNoteId(noteId);
+
       const stmt = this.db.prepare('DELETE FROM notes WHERE id = ?');
       stmt.run(noteId);
     } catch (error) {
       if (error instanceof Error) {
         logger.error(`Error permanently deleting note ${noteId}:`, error);
       } else {
-        logger.error(`Error permanently deleting note ${noteId}:`, new Error(String(error)));
+        logger.error(
+          `Error permanently deleting note ${noteId}:`,
+          new Error(String(error))
+        );
       }
       throw error;
     }
@@ -184,6 +242,13 @@ export class NotesRepository {
    */
   searchNotesByTitle(query: string): Note[] {
     try {
+      // Validate input
+      if (typeof query !== 'string') {
+        throw new ValidationError(
+          `Search query must be a string, received ${typeof query}`
+        );
+      }
+
       const stmt = this.db.prepare(`
         SELECT * FROM notes
         WHERE title LIKE ? AND deleted_at IS NULL
@@ -194,7 +259,10 @@ export class NotesRepository {
       if (error instanceof Error) {
         logger.error('Error searching notes by title:', error);
       } else {
-        logger.error('Error searching notes by title:', new Error(String(error)));
+        logger.error(
+          'Error searching notes by title:',
+          new Error(String(error))
+        );
       }
       throw error;
     }

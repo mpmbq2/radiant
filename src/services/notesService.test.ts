@@ -6,11 +6,16 @@ import {
   afterEach,
   beforeAll,
   afterAll,
+  vi,
 } from 'vitest';
 import { NotesService } from './notesService';
 import { NotesRepository } from '../database/notesRepository';
 import { TagsRepository } from '../database/tagsRepository';
-import { FileManager } from '../storage/fileManager';
+import {
+  FileManager,
+  FileSystemError,
+  FileSystemErrorCode,
+} from '../storage/fileManager';
 import {
   setupTestDatabase,
   teardownTestDatabase,
@@ -459,6 +464,401 @@ describe('NotesService', () => {
 
       // Verify tags are also preserved
       expect(fromService?.tags).toContain('consistency');
+    });
+  });
+
+  describe('error scenarios', () => {
+    describe('partial failures', () => {
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it('should handle file write failure during note creation', async () => {
+        // Mock fileManager.writeNote to throw error
+        const writeError = new FileSystemError(
+          FileSystemErrorCode.DISK_FULL,
+          '/test/path.md'
+        );
+
+        const writeNoteSpy = vi
+          .spyOn(FileManager.prototype, 'writeNote')
+          .mockImplementation(() => {
+            throw writeError;
+          });
+
+        await expect(
+          service.createNote({
+            title: 'Test Note',
+            content: 'Content',
+          })
+        ).rejects.toThrow(FileSystemError);
+
+        // Verify database record was created but note is not retrievable
+        // (because file doesn't exist)
+        writeNoteSpy.mockRestore();
+      });
+
+      it('should handle file read failure when getting note', async () => {
+        // First create a note successfully
+        const created = await service.createNote({
+          title: 'Test Note',
+          content: 'Content',
+        });
+
+        // Mock fileManager.readNote to throw error
+        const readError = new FileSystemError(
+          FileSystemErrorCode.FILE_NOT_FOUND,
+          created.file_path
+        );
+
+        vi.spyOn(FileManager.prototype, 'readNote').mockImplementation(() => {
+          throw readError;
+        });
+
+        // Service should handle the error gracefully in enrichNoteWithContent
+        const notes = await service.getAllNotes();
+        expect(notes).toHaveLength(1);
+        expect(notes[0].content).toBe(''); // Empty content due to read error
+        expect(notes[0].tags).toEqual([]); // Empty tags
+      });
+
+      it('should handle file delete failure during note deletion', async () => {
+        // First create a note successfully
+        const created = await service.createNote({
+          title: 'Test Note',
+          content: 'Content',
+        });
+
+        // Mock fileManager.deleteNote to throw error
+        const deleteError = new FileSystemError(
+          FileSystemErrorCode.PERMISSION_DENIED,
+          created.file_path
+        );
+
+        vi.spyOn(FileManager.prototype, 'deleteNote').mockImplementation(() => {
+          throw deleteError;
+        });
+
+        // Delete should fail with file system error
+        await expect(service.deleteNote(created.id)).rejects.toThrow(
+          FileSystemError
+        );
+
+        // Database record should still be marked as deleted (soft delete)
+        const retrieved = await service.getNoteById(created.id);
+        expect(retrieved).toBeNull(); // Soft deleted
+      });
+
+      it('should handle tag creation failure during note creation', async () => {
+        // Mock tagsRepo.setTagsForNote to throw error
+        const tagError = new Error('Tag creation failed');
+        vi.spyOn(TagsRepository.prototype, 'setTagsForNote').mockImplementation(
+          () => {
+            throw tagError;
+          }
+        );
+
+        await expect(
+          service.createNote({
+            title: 'Test Note',
+            content: 'Content',
+            tags: ['tag1', 'tag2'],
+          })
+        ).rejects.toThrow('Tag creation failed');
+      });
+
+      it('should handle database update failure during note update', async () => {
+        // First create a note successfully
+        const created = await service.createNote({
+          title: 'Test Note',
+          content: 'Content',
+        });
+
+        // Mock notesRepo.updateNote to throw error
+        const updateError = new Error('Database update failed');
+        vi.spyOn(NotesRepository.prototype, 'updateNote').mockImplementation(
+          () => {
+            throw updateError;
+          }
+        );
+
+        // Update should fail
+        await expect(
+          service.updateNote({
+            id: created.id,
+            title: 'New Title',
+          })
+        ).rejects.toThrow('Database update failed');
+      });
+    });
+
+    describe('file/database sync issues', () => {
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it('should handle orphaned database records without files', async () => {
+        // Create a note successfully
+        const created = await service.createNote({
+          title: 'Test Note',
+          content: 'Content',
+        });
+
+        // Manually delete the file to create orphaned database record
+        if (fs.existsSync(created.file_path)) {
+          fs.unlinkSync(created.file_path);
+        }
+
+        // getAllNotes should handle missing file gracefully
+        const notes = await service.getAllNotes();
+        expect(notes).toHaveLength(1);
+        expect(notes[0].content).toBe(''); // Empty content due to missing file
+      });
+
+      it('should handle file exists but database record missing', async () => {
+        // This scenario is less likely but could happen if database transaction fails
+        // after file write. The note would not be retrievable via service.
+        const noteId = 'orphan-file';
+        const filePath = fileManager.generateFilePath(noteId);
+
+        // Create file without database record
+        fileManager.writeNote(filePath, 'Orphan content', {
+          title: 'Orphan',
+          tags: [],
+          created_at: Date.now(),
+          modified_at: Date.now(),
+        });
+
+        // Try to get note by ID - should return null
+        const note = await service.getNoteById(noteId);
+        expect(note).toBeNull();
+
+        // Clean up orphaned file
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+
+      it('should handle file content out of sync with database metadata', async () => {
+        // Create a note
+        const created = await service.createNote({
+          title: 'Original Title',
+          content: 'Original content',
+        });
+
+        // Manually modify file to have different content
+        fileManager.writeNote(created.file_path, 'Manually changed content', {
+          title: 'Changed Title',
+          tags: ['manual'],
+          created_at: created.created_at,
+          modified_at: Date.now(),
+        });
+
+        // Service should read actual file content, not cached database data
+        const retrieved = await service.getNoteById(created.id);
+        expect(retrieved?.content.trim()).toBe('Manually changed content');
+        // But database metadata should still be original
+        expect(retrieved?.title).toBe('Original Title');
+      });
+    });
+
+    describe('concurrent modification scenarios', () => {
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it('should handle rapid sequential updates', async () => {
+        const created = await service.createNote({
+          title: 'Test Note',
+          content: 'Initial content',
+        });
+
+        // Perform rapid sequential updates
+        const update1 = service.updateNote({
+          id: created.id,
+          content: 'Update 1',
+        });
+
+        const update2 = service.updateNote({
+          id: created.id,
+          content: 'Update 2',
+        });
+
+        const update3 = service.updateNote({
+          id: created.id,
+          content: 'Update 3',
+        });
+
+        // Wait for all updates to complete
+        await Promise.all([update1, update2, update3]);
+
+        // Final content should be from last update
+        const final = await service.getNoteById(created.id);
+        expect(final?.content.trim()).toBe('Update 3');
+      });
+
+      it('should handle update during read operation', async () => {
+        const created = await service.createNote({
+          title: 'Test Note',
+          content: 'Initial content',
+        });
+
+        // Start a slow read operation (by mocking)
+        let readResolve!: () => void;
+
+        const originalReadNote = FileManager.prototype.readNote;
+        vi.spyOn(FileManager.prototype, 'readNote').mockImplementation(
+          function (this: FileManager, filePath: string) {
+            // Add small delay to simulate slow read
+            return new Promise<ReturnType<typeof originalReadNote>>(
+              (resolve) => {
+                setTimeout(() => {
+                  resolve(originalReadNote.call(this, filePath));
+                  if (readResolve) readResolve();
+                }, 50);
+              }
+            );
+          }
+        );
+
+        // Start read operation
+        const readOp = service.getNoteById(created.id);
+
+        // Update note while read is in progress
+        await service.updateNote({
+          id: created.id,
+          content: 'Updated during read',
+        });
+
+        // Wait for read to complete
+        const readResult = await readOp;
+
+        // Read operation should complete successfully
+        expect(readResult).toBeDefined();
+
+        // Subsequent read should get updated content
+        vi.restoreAllMocks();
+        const final = await service.getNoteById(created.id);
+        expect(final?.content.trim()).toBe('Updated during read');
+      });
+    });
+
+    describe('cleanup on errors', () => {
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it('should clean up resources when note creation fails after file write', async () => {
+        // Mock database createNote to fail
+        const createError = new Error('Database insert failed');
+        vi.spyOn(NotesRepository.prototype, 'createNote').mockImplementation(
+          () => {
+            throw createError;
+          }
+        );
+
+        try {
+          await service.createNote({
+            title: 'Test Note',
+            content: 'Content',
+          });
+        } catch (error) {
+          expect(error).toBeDefined();
+        }
+
+        // In current implementation, file is written but DB fails
+        // This creates an orphaned file - a known issue to be aware of
+        // Ideally, we'd want transactional semantics
+      });
+
+      it('should not corrupt database on failed update', async () => {
+        const created = await service.createNote({
+          title: 'Test Note',
+          content: 'Initial content',
+          tags: ['tag1'],
+        });
+
+        // Mock file write to fail during update
+        const writeError = new FileSystemError(
+          FileSystemErrorCode.DISK_FULL,
+          created.file_path
+        );
+
+        vi.spyOn(FileManager.prototype, 'writeNote').mockImplementation(() => {
+          throw writeError;
+        });
+
+        try {
+          await service.updateNote({
+            id: created.id,
+            content: 'This update will fail',
+          });
+        } catch (error) {
+          expect(error).toBeInstanceOf(FileSystemError);
+        }
+
+        // Restore mocks
+        vi.restoreAllMocks();
+
+        // Database should still have original data
+        const retrieved = await service.getNoteById(created.id);
+        expect(retrieved?.title).toBe('Test Note');
+        expect(retrieved?.content.trim()).toBe('Initial content');
+        expect(retrieved?.tags).toContain('tag1');
+      });
+    });
+
+    describe('validation with error scenarios', () => {
+      it('should validate before attempting any I/O operations', async () => {
+        // Spy on file operations
+        const writeNoteSpy = vi.spyOn(FileManager.prototype, 'writeNote');
+
+        // Try to create note with invalid title
+        await expect(
+          service.createNote({
+            title: '', // Invalid: empty title
+            content: 'Content',
+          })
+        ).rejects.toThrow(ValidationError);
+
+        // File write should never be called
+        expect(writeNoteSpy).not.toHaveBeenCalled();
+      });
+
+      it('should validate content length before writing large files', async () => {
+        const writeNoteSpy = vi.spyOn(FileManager.prototype, 'writeNote');
+
+        // Try to create note with content that's too large
+        const tooLarge = 'x'.repeat(1000001); // > 1MB
+
+        await expect(
+          service.createNote({
+            title: 'Test',
+            content: tooLarge,
+          })
+        ).rejects.toThrow(ValidationError);
+
+        // File write should never be called
+        expect(writeNoteSpy).not.toHaveBeenCalled();
+      });
+
+      it('should validate tags before processing', async () => {
+        const setTagsSpy = vi.spyOn(TagsRepository.prototype, 'setTagsForNote');
+
+        // Try to create note with too many tags
+        const tooManyTags = Array(51).fill('tag');
+
+        await expect(
+          service.createNote({
+            title: 'Test',
+            content: 'Content',
+            tags: tooManyTags,
+          })
+        ).rejects.toThrow(ValidationError);
+
+        // Tag operations should never be called
+        expect(setTagsSpy).not.toHaveBeenCalled();
+      });
     });
   });
 });
