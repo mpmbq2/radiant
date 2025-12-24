@@ -331,12 +331,18 @@ describe('TagsRepository', () => {
   });
 
   describe('setTagsForNote - Transaction Error Handling', () => {
+    // Clean up mocks after each test in this suite
+    afterEach(() => {
+      // Clear mocks but don't restore them (to preserve test database setup)
+      vi.clearAllMocks();
+    });
+
     it('should handle constraint violation with clear error message', async () => {
       // Try to set tags for a note that doesn't exist (foreign key constraint)
       // This will violate the foreign key constraint since note-nonexistent doesn't exist
       await expect(
         repository.setTagsForNote(uuidv4(), ['JavaScript'])
-      ).rejects.toThrow(/Constraint violation/);
+      ).rejects.toThrow(/FOREIGN KEY constraint failed/);
     });
 
     it('should rollback transaction on error - no partial state', async () => {
@@ -372,8 +378,6 @@ describe('TagsRepository', () => {
       expect(tagsAfterError).toContain('javascript');
       expect(tagsAfterError).toContain('typescript');
 
-      // Cleanup
-      vi.restoreAllMocks();
     });
 
     it('should maintain database consistency after transaction failure', async () => {
@@ -406,8 +410,6 @@ describe('TagsRepository', () => {
       const tagsAfter = repository.getAllTags();
       expect(tagsAfter).toHaveLength(2);
 
-      // Cleanup
-      vi.restoreAllMocks();
     });
 
     it('should successfully complete transaction after temporary database lock', async () => {
@@ -444,8 +446,6 @@ describe('TagsRepository', () => {
       // Verify retry happened
       expect(attemptCount).toBe(2);
 
-      // Cleanup
-      vi.restoreAllMocks();
     });
 
     it('should fail after max retries on persistent database lock', async () => {
@@ -469,8 +469,6 @@ describe('TagsRepository', () => {
       const tags = repository.getTagsForNote(testNoteId1);
       expect(tags).toHaveLength(0);
 
-      // Cleanup
-      vi.restoreAllMocks();
     });
 
     it('should handle SQLITE_LOCKED error with retry logic', async () => {
@@ -504,8 +502,6 @@ describe('TagsRepository', () => {
       expect(tags).toHaveLength(1);
       expect(tags[0]).toBe('typescript');
 
-      // Cleanup
-      vi.restoreAllMocks();
     });
 
     it('should not retry on non-retriable errors', async () => {
@@ -528,8 +524,6 @@ describe('TagsRepository', () => {
       // Verify only one attempt was made
       expect(attemptCount).toBe(1);
 
-      // Cleanup
-      vi.restoreAllMocks();
     });
   });
 });

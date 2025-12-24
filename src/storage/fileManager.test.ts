@@ -240,7 +240,7 @@ describe('FileManager', () => {
 
     it('should return all markdown files in notes directory', () => {
       fileManager.writeNote(
-        fileManager.generateFilePath('note-1'),
+        fileManager.generateFilePath('750e8400-e29b-41d4-a716-446655440001'),
         'Content 1',
         {
           title: 'Note 1',
@@ -250,7 +250,7 @@ describe('FileManager', () => {
         }
       );
       fileManager.writeNote(
-        fileManager.generateFilePath('note-2'),
+        fileManager.generateFilePath('750e8400-e29b-41d4-a716-446655440002'),
         'Content 2',
         {
           title: 'Note 2',
@@ -260,7 +260,7 @@ describe('FileManager', () => {
         }
       );
       fileManager.writeNote(
-        fileManager.generateFilePath('note-3'),
+        fileManager.generateFilePath('750e8400-e29b-41d4-a716-446655440003'),
         'Content 3',
         {
           title: 'Note 3',
@@ -275,7 +275,7 @@ describe('FileManager', () => {
     });
 
     it('should only return .md files', () => {
-      fileManager.writeNote(fileManager.generateFilePath('note-1'), 'Content', {
+      fileManager.writeNote(fileManager.generateFilePath('750e8400-e29b-41d4-a716-446655440001'), 'Content', {
         title: 'Note 1',
         tags: [],
         created_at: Date.now(),
@@ -307,7 +307,7 @@ describe('FileManager', () => {
 
   describe('write and read cycle', () => {
     it('should preserve all data through write-read cycle', () => {
-      const noteId = 'test-note-11';
+      const noteId = '550e8400-e29b-41d4-a716-446655440011';
       const filePath = fileManager.generateFilePath(noteId);
       const originalContent = 'Original content with **markdown**';
       const originalFrontmatter = {
@@ -332,7 +332,7 @@ describe('FileManager', () => {
       });
 
       it('should throw FileSystemError with PERMISSION_DENIED when writing file without permission', () => {
-        const noteId = 'test-note-permission';
+        const noteId = '550e8400-e29b-41d4-a716-446655440020';
         const filePath = fileManager.generateFilePath(noteId);
         const frontmatter = {
           title: 'Test',
@@ -359,7 +359,7 @@ describe('FileManager', () => {
       });
 
       it('should throw FileSystemError with PERMISSION_DENIED when reading file without permission', () => {
-        const noteId = 'test-note-read-permission';
+        const noteId = '550e8400-e29b-41d4-a716-446655440021';
         const filePath = fileManager.generateFilePath(noteId);
 
         // First create the file
@@ -385,7 +385,7 @@ describe('FileManager', () => {
       });
 
       it('should throw FileSystemError with PERMISSION_DENIED when deleting file without permission', () => {
-        const noteId = 'test-note-delete-permission';
+        const noteId = '550e8400-e29b-41d4-a716-446655440022';
         const filePath = fileManager.generateFilePath(noteId);
 
         // First create the file
@@ -444,7 +444,7 @@ describe('FileManager', () => {
       });
 
       it('should throw FileSystemError with DISK_FULL when writing to full disk', () => {
-        const noteId = 'test-note-diskfull';
+        const noteId = '550e8400-e29b-41d4-a716-446655440023';
         const filePath = fileManager.generateFilePath(noteId);
         const frontmatter = {
           title: 'Test',
@@ -563,7 +563,7 @@ describe('FileManager', () => {
       });
 
       it('should throw FileSystemError with ENCODING_ERROR when reading corrupted file', () => {
-        const noteId = 'test-note-encoding';
+        const noteId = '850e8400-e29b-41d4-a716-446655440003';
         const filePath = fileManager.generateFilePath(noteId);
 
         // First create the file
