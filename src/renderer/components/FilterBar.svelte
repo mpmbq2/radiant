@@ -10,6 +10,7 @@
     ComparisonOperator,
   } from '../../filters/types';
   import type { FilterInterface } from '../../filters';
+  import { UNDERSCORE_PATTERN } from '../../utils/regexPatterns';
 
   const store = notesStore;
 
@@ -137,7 +138,7 @@
       const preset = (config as any).preset;
       const field = (config as any).field;
       const fieldName = field === DateField.CREATED_AT ? 'Created' : 'Modified';
-      const presetName = preset.replace(/_/g, ' ').toLowerCase();
+      const presetName = preset.replace(UNDERSCORE_PATTERN, ' ').toLowerCase();
       return `${fieldName}: ${presetName}`;
     }
 

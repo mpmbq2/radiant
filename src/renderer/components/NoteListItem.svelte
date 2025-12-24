@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { NoteWithContent } from '../../types';
   import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
+  import { HTML_TAG_PATTERN } from '../../utils/regexPatterns';
 
   interface Props {
     note: NoteWithContent;
@@ -36,7 +37,7 @@
   }
 
   function stripHtmlTags(html: string): string {
-    return html.replace(/<[^>]*>?/gm, '');
+    return html.replace(HTML_TAG_PATTERN, '');
   }
 
   function truncateContent(content: string, maxLength: number = 100): string {

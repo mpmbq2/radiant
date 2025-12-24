@@ -15,6 +15,8 @@ import {
   validateNoteTitle,
   validateNoteContent,
   validateTags,
+  sanitizeNoteTitle,
+  sanitizeTagName,
 } from '../utils/validation';
 
 const logger = createLogger('NotesService');
@@ -34,31 +36,37 @@ export class NotesService {
   async createNote(input: CreateNoteInput): Promise<NoteWithContent> {
     logger.info('Creating note', { title: input.title, tags: input.tags });
 
-    // Validate inputs
-    validateNoteTitle(input.title);
+    // Sanitize inputs first to prevent duplicate-looking entries
+    const sanitizedTitle = sanitizeNoteTitle(input.title);
+    const sanitizedTags = input.tags
+      ? input.tags.map(sanitizeTagName).filter((tag) => tag.length > 0)
+      : [];
+
+    // Validate sanitized inputs
+    validateNoteTitle(sanitizedTitle);
     validateNoteContent(input.content || '');
-    if (input.tags) {
-      validateTags(input.tags);
+    if (sanitizedTags.length > 0) {
+      validateTags(sanitizedTags);
     }
 
     const noteId = uuidv4();
     const filePath = fileManager.generateFilePath(noteId);
     const now = Date.now();
 
-    // Create database record
-    const note = this.notesRepo.createNote(noteId, input.title, filePath);
+    // Create database record with sanitized title
+    const note = this.notesRepo.createNote(noteId, sanitizedTitle, filePath);
 
-    // Write file
+    // Write file with sanitized data
     fileManager.writeNote(filePath, input.content || '', {
-      title: input.title,
-      tags: input.tags || [],
+      title: sanitizedTitle,
+      tags: sanitizedTags,
       created_at: now,
       modified_at: now,
     });
 
-    // Set tags if provided
-    if (input.tags && input.tags.length > 0) {
-      await this.tagsRepo.setTagsForNote(noteId, input.tags);
+    // Set tags if provided (using sanitized tags)
+    if (sanitizedTags.length > 0) {
+      await this.tagsRepo.setTagsForNote(noteId, sanitizedTags);
     }
 
     // Calculate word count
@@ -73,7 +81,7 @@ export class NotesService {
     return {
       ...note,
       content: input.content || '',
-      tags: input.tags || [],
+      tags: sanitizedTags,
       word_count: wordCount,
       character_count: charCount,
     };
@@ -137,6 +145,14 @@ export class NotesService {
       return null;
     }
 
+    // Sanitize inputs
+    const sanitizedTitle = input.title
+      ? sanitizeNoteTitle(input.title)
+      : undefined;
+    const sanitizedTags = input.tags
+      ? input.tags.map(sanitizeTagName).filter((tag) => tag.length > 0)
+      : undefined;
+
     const now = Date.now();
     const updates: {
       title?: string;
@@ -144,9 +160,9 @@ export class NotesService {
       character_count?: number;
     } = {};
 
-    // Update title if provided
-    if (input.title !== undefined) {
-      updates.title = input.title;
+    // Update title if provided (using sanitized version)
+    if (sanitizedTitle !== undefined) {
+      updates.title = sanitizedTitle;
     }
 
     // Update content if provided
@@ -157,12 +173,12 @@ export class NotesService {
       // Read current frontmatter
       const currentFile = fileManager.readNote(note.file_path);
 
-      // Write updated file
+      // Write updated file with sanitized data
       fileManager.writeNote(note.file_path, content, {
         ...currentFile.frontmatter,
-        title: input.title || note.title,
+        title: sanitizedTitle || note.title,
         modified_at: now,
-        tags: input.tags || currentFile.frontmatter.tags,
+        tags: sanitizedTags || currentFile.frontmatter.tags,
       });
 
       // Update word count
@@ -170,9 +186,9 @@ export class NotesService {
       updates.character_count = content.length;
     }
 
-    // Update tags if provided
-    if (input.tags !== undefined) {
-      await this.tagsRepo.setTagsForNote(input.id, input.tags);
+    // Update tags if provided (using sanitized tags)
+    if (sanitizedTags !== undefined) {
+      await this.tagsRepo.setTagsForNote(input.id, sanitizedTags);
     }
 
     // Update database

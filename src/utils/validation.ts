@@ -1,11 +1,52 @@
 import path from 'path';
 import { VALIDATION_LIMITS } from '../config/validation';
+import {
+  UUID_V4_PATTERN,
+  INVALID_TAG_NAME_CHARS,
+  INVALID_FILENAME_CHARS,
+  WHITESPACE_PATTERN,
+} from './regexPatterns';
 
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'ValidationError';
   }
+}
+
+/**
+ * Sanitize a note title by:
+ * 1. Trimming leading and trailing whitespace
+ * 2. Normalizing internal whitespace (collapsing multiple spaces to single space)
+ * 3. Preserving intentional formatting (e.g., tabs, newlines are collapsed to spaces)
+ *
+ * This prevents duplicate-looking titles like "My Note" vs "My  Note" or "My Note " from being treated as different.
+ */
+export function sanitizeNoteTitle(title: string): string {
+  if (typeof title !== 'string') {
+    return '';
+  }
+
+  // Trim leading/trailing whitespace and normalize internal whitespace
+  // Replace all sequences of whitespace characters with a single space
+  return title.trim().replace(WHITESPACE_PATTERN, ' ');
+}
+
+/**
+ * Sanitize a tag name by:
+ * 1. Trimming leading and trailing whitespace
+ * 2. Normalizing internal whitespace (collapsing multiple spaces to single space)
+ * 3. Converting to lowercase for case-insensitive comparison
+ *
+ * This prevents duplicate-looking tags like "JavaScript" vs "javascript" or "My Tag" vs "My  Tag" from being treated as different.
+ */
+export function sanitizeTagName(tagName: string): string {
+  if (typeof tagName !== 'string') {
+    return '';
+  }
+
+  // Trim, normalize whitespace, and lowercase
+  return tagName.trim().replace(WHITESPACE_PATTERN, ' ').toLowerCase();
 }
 
 /**
@@ -45,11 +86,7 @@ export function validateString(
 export function validateNoteId(noteId: unknown): asserts noteId is string {
   validateString(noteId, 'Note ID');
 
-  // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-  if (!uuidRegex.test(noteId as string)) {
+  if (!UUID_V4_PATTERN.test(noteId as string)) {
     throw new ValidationError(
       `Note ID must be a valid UUID v4 format, received: ${noteId}`
     );
@@ -58,6 +95,8 @@ export function validateNoteId(noteId: unknown): asserts noteId is string {
 
 /**
  * Validate note title
+ * Note: This validates the title but does not sanitize it.
+ * Call sanitizeNoteTitle() before validation to ensure consistent formatting.
  */
 export function validateNoteTitle(title: unknown): asserts title is string {
   if (typeof title !== 'string') {
@@ -66,11 +105,14 @@ export function validateNoteTitle(title: unknown): asserts title is string {
     );
   }
 
-  if (!title || title.trim().length === 0) {
+  // Use sanitized version for validation checks
+  const sanitized = sanitizeNoteTitle(title);
+
+  if (sanitized.length === 0) {
     throw new ValidationError('Note title is required');
   }
 
-  if (title.length > VALIDATION_LIMITS.NOTE_TITLE_MAX_LENGTH) {
+  if (sanitized.length > VALIDATION_LIMITS.NOTE_TITLE_MAX_LENGTH) {
     throw new ValidationError(
       `Note title must be less than ${VALIDATION_LIMITS.NOTE_TITLE_MAX_LENGTH} characters`
     );
@@ -96,6 +138,8 @@ export function validateNoteContent(
 
 /**
  * Validate tag name
+ * Note: This validates the tag name but does not sanitize it.
+ * Call sanitizeTagName() before validation to ensure consistent formatting.
  */
 export function validateTagName(tagName: unknown): asserts tagName is string {
   if (typeof tagName !== 'string') {
@@ -104,20 +148,22 @@ export function validateTagName(tagName: unknown): asserts tagName is string {
     );
   }
 
-  if (!tagName || tagName.trim().length === 0) {
+  // Use sanitized version for validation checks
+  const sanitized = sanitizeTagName(tagName);
+
+  if (sanitized.length === 0) {
     throw new ValidationError('Tag name cannot be empty');
   }
 
-  if (tagName.length > VALIDATION_LIMITS.TAG_NAME_MAX_LENGTH) {
+  if (sanitized.length > VALIDATION_LIMITS.TAG_NAME_MAX_LENGTH) {
     throw new ValidationError(
       `Tag name must be less than ${VALIDATION_LIMITS.TAG_NAME_MAX_LENGTH} characters`
     );
   }
 
   // Prevent invalid characters in tag names
-  // eslint-disable-next-line no-control-regex
-  const invalidChars = /[<>:"/\\|?*\x00-\x1f]/;
-  if (invalidChars.test(tagName)) {
+  // Check against the sanitized value
+  if (INVALID_TAG_NAME_CHARS.test(sanitized)) {
     throw new ValidationError(
       'Tag name contains invalid characters (cannot use: < > : " / \\ | ? * or control characters)'
     );
@@ -205,10 +251,8 @@ export function validateFilePath(
   }
 
   // Check for invalid characters (mainly for Windows compatibility)
-  // eslint-disable-next-line no-control-regex
-  const invalidChars = /[<>:"|?*\x00-\x1f]/;
   const fileName = path.basename(filePath as string);
-  if (invalidChars.test(fileName)) {
+  if (INVALID_FILENAME_CHARS.test(fileName)) {
     throw new ValidationError(
       `File path contains invalid characters: ${fileName}`
     );

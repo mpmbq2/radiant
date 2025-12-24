@@ -1,13 +1,26 @@
 import type { Note, NoteWithContent } from '../types';
+import type { TagFilterConfig } from './TagFilter';
+import type { DateRangeFilterConfig } from './DateRangeFilter';
+import type { ContentFilterConfig } from './ContentFilter';
+import type { CompositeFilterConfig } from './CompositeFilter';
 
 /**
- * Serializable filter configuration
- * Each concrete filter defines its own config structure
+ * Base filter configuration interface
+ * All filter configs must have a type field
  */
-export interface FilterConfig {
+export interface BaseFilterConfig {
   type: string;
-  [key: string]: any;
 }
+
+/**
+ * Discriminated union of all filter configurations
+ * This provides type safety and IDE autocomplete for filter configs
+ */
+export type FilterConfig =
+  | TagFilterConfig
+  | DateRangeFilterConfig
+  | ContentFilterConfig
+  | CompositeFilterConfig;
 
 /**
  * Result of filter validation

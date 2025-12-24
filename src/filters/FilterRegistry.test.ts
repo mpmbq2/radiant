@@ -48,6 +48,273 @@ describe('FilterRegistry', () => {
         registry.register(FilterType.TAG, factory);
       }).toThrow("Filter type 'TAG' is already registered");
     });
+
+    describe('type parameter validation', () => {
+      const factory = (config: FilterConfig) => new TagFilter(config);
+
+      it('should throw error for null type', () => {
+        expect(() => {
+          registry.register(null as any, factory);
+        }).toThrow('Filter type cannot be null or undefined');
+      });
+
+      it('should throw error for undefined type', () => {
+        expect(() => {
+          registry.register(undefined as any, factory);
+        }).toThrow('Filter type cannot be null or undefined');
+      });
+
+      it('should throw error for non-string type', () => {
+        expect(() => {
+          registry.register(123 as any, factory);
+        }).toThrow('Filter type must be a string, received number');
+      });
+
+      it('should throw error for object type', () => {
+        expect(() => {
+          registry.register({ type: 'TAG' } as any, factory);
+        }).toThrow('Filter type must be a string, received object');
+      });
+
+      it('should throw error for empty string type', () => {
+        expect(() => {
+          registry.register('', factory);
+        }).toThrow('Filter type cannot be an empty string');
+      });
+
+      it('should throw error for whitespace-only type', () => {
+        expect(() => {
+          registry.register('   ', factory);
+        }).toThrow('Filter type cannot be an empty string');
+      });
+    });
+
+    describe('factory parameter validation', () => {
+      it('should throw error for null factory', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, null as any);
+        }).toThrow('Filter factory cannot be null or undefined');
+      });
+
+      it('should throw error for undefined factory', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, undefined as any);
+        }).toThrow('Filter factory cannot be null or undefined');
+      });
+
+      it('should throw error for non-function factory', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, 'not a function' as any);
+        }).toThrow('Filter factory must be a function, received string');
+      });
+
+      it('should throw error for object factory', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, {} as any);
+        }).toThrow('Filter factory must be a function, received object');
+      });
+
+      it('should throw error for number factory', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, 123 as any);
+        }).toThrow('Filter factory must be a function, received number');
+      });
+    });
+
+    describe('metadata parameter validation', () => {
+      const factory = (config: FilterConfig) => new TagFilter(config);
+
+      it('should throw error for non-object metadata', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, 'invalid' as any);
+        }).toThrow(
+          'Filter metadata must be an object, not an array or primitive'
+        );
+      });
+
+      it('should throw error for array metadata', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, [] as any);
+        }).toThrow(
+          'Filter metadata must be an object, not an array or primitive'
+        );
+      });
+
+      it('should throw error for metadata missing displayName', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            description: 'Test',
+          } as any);
+        }).toThrow('Filter metadata must include a "displayName" property');
+      });
+
+      it('should throw error for metadata missing description', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+          } as any);
+        }).toThrow('Filter metadata must include a "description" property');
+      });
+
+      it('should throw error for non-string displayName', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 123,
+            description: 'Test',
+          } as any);
+        }).toThrow('Filter metadata "displayName" must be a string');
+      });
+
+      it('should throw error for non-string description', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: true,
+          } as any);
+        }).toThrow('Filter metadata "description" must be a string');
+      });
+
+      it('should throw error for empty displayName', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: '',
+            description: 'Test',
+          });
+        }).toThrow('Filter metadata "displayName" cannot be empty');
+      });
+
+      it('should throw error for whitespace-only displayName', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: '   ',
+            description: 'Test',
+          });
+        }).toThrow('Filter metadata "displayName" cannot be empty');
+      });
+
+      it('should throw error for empty description', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: '',
+          });
+        }).toThrow('Filter metadata "description" cannot be empty');
+      });
+
+      it('should throw error for whitespace-only description', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: '   ',
+          });
+        }).toThrow('Filter metadata "description" cannot be empty');
+      });
+
+      it('should throw error for non-string category', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: 'Test',
+            category: 123,
+          } as any);
+        }).toThrow('Filter metadata "category" must be a string');
+      });
+
+      it('should throw error for empty category', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: 'Test',
+            category: '',
+          });
+        }).toThrow('Filter metadata "category" cannot be empty');
+      });
+
+      it('should throw error for non-function configSchema', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: 'Test',
+            configSchema: 'not a function',
+          } as any);
+        }).toThrow('Filter metadata "configSchema" must be a function');
+      });
+
+      it('should throw error for non-object example', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: 'Test',
+            example: 'invalid',
+          } as any);
+        }).toThrow(
+          'Filter metadata "example" must be a valid FilterConfig object'
+        );
+      });
+
+      it('should throw error for null example', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: 'Test',
+            example: null,
+          } as any);
+        }).toThrow(
+          'Filter metadata "example" must be a valid FilterConfig object'
+        );
+      });
+
+      it('should throw error for array example', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: 'Test',
+            example: [],
+          } as any);
+        }).toThrow(
+          'Filter metadata "example" must be a valid FilterConfig object'
+        );
+      });
+
+      it('should throw error for example missing type field', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: 'Test',
+            example: { tags: ['work'] },
+          } as any);
+        }).toThrow('Filter metadata "example" must have a "type" field');
+      });
+
+      it('should throw error for example with non-string type', () => {
+        expect(() => {
+          registry.register(FilterType.TAG, factory, {
+            displayName: 'Test',
+            description: 'Test',
+            example: { type: 123, tags: ['work'] },
+          } as any);
+        }).toThrow('Filter metadata "example.type" must be a string');
+      });
+
+      it('should accept valid metadata with all optional fields', () => {
+        const validMetadata = {
+          displayName: 'Tag Filter',
+          description: 'Filter notes by tags',
+          category: 'Content',
+          configSchema: validateTagFilterConfig,
+          example: {
+            type: FilterType.TAG,
+            tags: ['work'],
+          },
+        };
+
+        expect(() => {
+          registry.register(FilterType.TAG, factory, validMetadata);
+        }).not.toThrow();
+
+        expect(registry.getMetadata(FilterType.TAG)).toEqual(validMetadata);
+      });
+    });
   });
 
   describe('unregister', () => {

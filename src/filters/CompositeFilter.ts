@@ -1,6 +1,7 @@
 import type { Note, NoteWithContent } from '../types';
 import {
   FilterInterface,
+  BaseFilterConfig,
   FilterConfig,
   FilterValidationResult,
   validationSuccess,
@@ -11,7 +12,7 @@ import { FilterType, LogicalOperator } from './types';
 /**
  * Configuration for CompositeFilter
  */
-export interface CompositeFilterConfig extends FilterConfig {
+export interface CompositeFilterConfig extends BaseFilterConfig {
   type: typeof FilterType.COMPOSITE;
 
   /** Logical operator for combining filters */

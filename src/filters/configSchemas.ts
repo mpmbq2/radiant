@@ -3,7 +3,7 @@
  * These validate filter configurations BEFORE filter creation
  */
 
-import type { FilterConfig } from './FilterInterface';
+import type { BaseFilterConfig } from './FilterInterface';
 import type { ConfigValidationResult } from './FilterRegistry';
 import { LogicalOperator, DateField, ComparisonOperator } from './types';
 
@@ -21,13 +21,16 @@ function validationResult(errors: string[]): ConfigValidationResult {
  * Validate TagFilter configuration
  */
 export function validateTagFilterConfig(
-  config: FilterConfig
+  config: BaseFilterConfig
 ): ConfigValidationResult {
   const errors: string[] = [];
 
+  // TypeScript type assertion to access properties (validated at runtime below)
+  const configData = config as unknown as Record<string, unknown>;
+
   // Must have at least one tag or excludeTag
-  const tags = (config as any).tags;
-  const excludeTags = (config as any).excludeTags;
+  const tags = configData.tags;
+  const excludeTags = configData.excludeTags;
 
   if (
     (!tags || !Array.isArray(tags) || tags.length === 0) &&
@@ -67,7 +70,7 @@ export function validateTagFilterConfig(
   }
 
   // Operator must be AND or OR if specified
-  const operator = (config as any).operator;
+  const operator = configData.operator;
   if (
     operator !== undefined &&
     operator !== LogicalOperator.AND &&
@@ -77,7 +80,7 @@ export function validateTagFilterConfig(
   }
 
   // caseSensitive must be boolean if specified
-  const caseSensitive = (config as any).caseSensitive;
+  const caseSensitive = configData.caseSensitive;
   if (caseSensitive !== undefined && typeof caseSensitive !== 'boolean') {
     errors.push('caseSensitive: Must be a boolean');
   }
@@ -89,14 +92,17 @@ export function validateTagFilterConfig(
  * Validate DateRangeFilter configuration
  */
 export function validateDateRangeFilterConfig(
-  config: FilterConfig
+  config: BaseFilterConfig
 ): ConfigValidationResult {
   const errors: string[] = [];
 
-  const field = (config as any).field;
-  const preset = (config as any).preset;
-  const start = (config as any).start;
-  const end = (config as any).end;
+  // TypeScript type assertion to access properties (validated at runtime below)
+  const configData = config as unknown as Record<string, unknown>;
+
+  const field = configData.field;
+  const preset = configData.preset;
+  const start = configData.start;
+  const end = configData.end;
 
   // Field must be specified and valid
   if (!field) {
@@ -126,9 +132,11 @@ export function validateDateRangeFilterConfig(
   if (
     start !== undefined &&
     end !== undefined &&
+    start !== null &&
+    end !== null &&
     Number.isFinite(start) &&
     Number.isFinite(end) &&
-    start > end
+    (start as number) > (end as number)
   ) {
     errors.push('start/end: Start date must be before or equal to end date');
   }
@@ -140,16 +148,19 @@ export function validateDateRangeFilterConfig(
  * Validate ContentFilter configuration
  */
 export function validateContentFilterConfig(
-  config: FilterConfig
+  config: BaseFilterConfig
 ): ConfigValidationResult {
   const errors: string[] = [];
 
-  const query = (config as any).query;
-  const pattern = (config as any).pattern;
-  const operator = (config as any).operator;
-  const searchTitle = (config as any).searchTitle;
-  const searchContent = (config as any).searchContent;
-  const caseSensitive = (config as any).caseSensitive;
+  // TypeScript type assertion to access properties (validated at runtime below)
+  const configData = config as unknown as Record<string, unknown>;
+
+  const query = configData.query;
+  const pattern = configData.pattern;
+  const operator = configData.operator;
+  const searchTitle = configData.searchTitle;
+  const searchContent = configData.searchContent;
+  const caseSensitive = configData.caseSensitive;
 
   // Must have query or pattern
   if (!query && !pattern) {
@@ -201,7 +212,7 @@ export function validateContentFilterConfig(
   // Validate regex if using regex operator
   if (operator === ComparisonOperator.MATCHES_REGEX) {
     const patternToValidate = pattern || query;
-    if (patternToValidate) {
+    if (patternToValidate && typeof patternToValidate === 'string') {
       try {
         new RegExp(patternToValidate);
       } catch (error) {
@@ -219,12 +230,15 @@ export function validateContentFilterConfig(
  * Validate CompositeFilter configuration
  */
 export function validateCompositeFilterConfig(
-  config: FilterConfig
+  config: BaseFilterConfig
 ): ConfigValidationResult {
   const errors: string[] = [];
 
-  const operator = (config as any).operator;
-  const filters = (config as any).filters;
+  // TypeScript type assertion to access properties (validated at runtime below)
+  const configData = config as unknown as Record<string, unknown>;
+
+  const operator = configData.operator;
+  const filters = configData.filters;
 
   // Operator must be specified and valid
   if (!operator) {

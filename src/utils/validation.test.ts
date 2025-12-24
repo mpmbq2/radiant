@@ -10,6 +10,8 @@ import {
   validateFilePath,
   validateSearchQuery,
   ValidationError,
+  sanitizeNoteTitle,
+  sanitizeTagName,
 } from './validation';
 import { VALIDATION_LIMITS } from '../config/validation';
 
@@ -358,6 +360,101 @@ describe('validation', () => {
     it('should reject non-strings', () => {
       expect(() => validateSearchQuery(123 as any)).toThrow(ValidationError);
       expect(() => validateSearchQuery(null as any)).toThrow(ValidationError);
+    });
+  });
+
+  describe('sanitizeNoteTitle', () => {
+    it('should trim leading and trailing whitespace', () => {
+      expect(sanitizeNoteTitle('  My Note  ')).toBe('My Note');
+      expect(sanitizeNoteTitle('\t My Note \t')).toBe('My Note');
+      expect(sanitizeNoteTitle('\n My Note \n')).toBe('My Note');
+    });
+
+    it('should normalize internal whitespace to single spaces', () => {
+      expect(sanitizeNoteTitle('My  Note')).toBe('My Note');
+      expect(sanitizeNoteTitle('My   Note')).toBe('My Note');
+      expect(sanitizeNoteTitle('My\t\tNote')).toBe('My Note');
+      expect(sanitizeNoteTitle('My\n\nNote')).toBe('My Note');
+      expect(sanitizeNoteTitle('My \t\n Note')).toBe('My Note');
+    });
+
+    it('should handle multiple words with irregular spacing', () => {
+      expect(sanitizeNoteTitle('  This   is  a   test  ')).toBe(
+        'This is a test'
+      );
+    });
+
+    it('should preserve single spaces', () => {
+      expect(sanitizeNoteTitle('My Note Title')).toBe('My Note Title');
+    });
+
+    it('should return empty string for non-string inputs', () => {
+      expect(sanitizeNoteTitle(123 as any)).toBe('');
+      expect(sanitizeNoteTitle(null as any)).toBe('');
+      expect(sanitizeNoteTitle(undefined as any)).toBe('');
+    });
+
+    it('should return empty string for whitespace-only inputs', () => {
+      expect(sanitizeNoteTitle('   ')).toBe('');
+      expect(sanitizeNoteTitle('\t\t')).toBe('');
+      expect(sanitizeNoteTitle('\n\n')).toBe('');
+    });
+
+    it('should handle empty strings', () => {
+      expect(sanitizeNoteTitle('')).toBe('');
+    });
+
+    it('should preserve case', () => {
+      expect(sanitizeNoteTitle('My Title')).toBe('My Title');
+      expect(sanitizeNoteTitle('MY TITLE')).toBe('MY TITLE');
+    });
+  });
+
+  describe('sanitizeTagName', () => {
+    it('should trim leading and trailing whitespace', () => {
+      expect(sanitizeTagName('  javascript  ')).toBe('javascript');
+      expect(sanitizeTagName('\t javascript \t')).toBe('javascript');
+    });
+
+    it('should normalize internal whitespace to single spaces', () => {
+      expect(sanitizeTagName('my  tag')).toBe('my tag');
+      expect(sanitizeTagName('my   tag')).toBe('my tag');
+      expect(sanitizeTagName('my\t\ttag')).toBe('my tag');
+    });
+
+    it('should convert to lowercase', () => {
+      expect(sanitizeTagName('JavaScript')).toBe('javascript');
+      expect(sanitizeTagName('MY TAG')).toBe('my tag');
+      expect(sanitizeTagName('CamelCase')).toBe('camelcase');
+    });
+
+    it('should combine all transformations', () => {
+      expect(sanitizeTagName('  JavaScript  ')).toBe('javascript');
+      expect(sanitizeTagName('  My  Tag  ')).toBe('my tag');
+      expect(sanitizeTagName('\tMy\t\tTag\t')).toBe('my tag');
+    });
+
+    it('should return empty string for non-string inputs', () => {
+      expect(sanitizeTagName(123 as any)).toBe('');
+      expect(sanitizeTagName(null as any)).toBe('');
+      expect(sanitizeTagName(undefined as any)).toBe('');
+    });
+
+    it('should return empty string for whitespace-only inputs', () => {
+      expect(sanitizeTagName('   ')).toBe('');
+      expect(sanitizeTagName('\t\t')).toBe('');
+    });
+
+    it('should handle empty strings', () => {
+      expect(sanitizeTagName('')).toBe('');
+    });
+
+    it('should prevent duplicate-looking tags', () => {
+      // All of these should result in the same sanitized value
+      expect(sanitizeTagName('JavaScript')).toBe('javascript');
+      expect(sanitizeTagName('javascript')).toBe('javascript');
+      expect(sanitizeTagName('  JavaScript  ')).toBe('javascript');
+      expect(sanitizeTagName('JAVASCRIPT')).toBe('javascript');
     });
   });
 });
