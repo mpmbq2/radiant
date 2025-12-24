@@ -28,13 +28,124 @@ export class FilterRegistry {
    * @param type - Unique filter type identifier
    * @param factory - Factory function that creates filter instances
    * @param metadata - Optional metadata about the filter
-   * @throws Error if type is already registered
+   * @throws Error if type is already registered or parameters are invalid
    */
   register(
     type: string,
     factory: FilterFactory,
     metadata?: FilterMetadata
   ): void {
+    // Validate type parameter
+    if (type == null) {
+      throw new Error('Filter type cannot be null or undefined');
+    }
+
+    if (typeof type !== 'string') {
+      throw new Error(
+        `Filter type must be a string, received ${typeof type}`
+      );
+    }
+
+    if (type.trim().length === 0) {
+      throw new Error('Filter type cannot be an empty string');
+    }
+
+    // Validate factory parameter
+    if (factory == null) {
+      throw new Error('Filter factory cannot be null or undefined');
+    }
+
+    if (typeof factory !== 'function') {
+      throw new Error(
+        `Filter factory must be a function, received ${typeof factory}`
+      );
+    }
+
+    // Validate metadata parameter if provided
+    if (metadata != null) {
+      if (typeof metadata !== 'object' || Array.isArray(metadata)) {
+        throw new Error(
+          'Filter metadata must be an object, not an array or primitive'
+        );
+      }
+
+      // Validate required metadata fields
+      if (!('displayName' in metadata)) {
+        throw new Error(
+          'Filter metadata must include a "displayName" property'
+        );
+      }
+
+      if (!('description' in metadata)) {
+        throw new Error(
+          'Filter metadata must include a "description" property'
+        );
+      }
+
+      if (typeof metadata.displayName !== 'string') {
+        throw new Error('Filter metadata "displayName" must be a string');
+      }
+
+      if (typeof metadata.description !== 'string') {
+        throw new Error('Filter metadata "description" must be a string');
+      }
+
+      if (metadata.displayName.trim().length === 0) {
+        throw new Error('Filter metadata "displayName" cannot be empty');
+      }
+
+      if (metadata.description.trim().length === 0) {
+        throw new Error('Filter metadata "description" cannot be empty');
+      }
+
+      // Validate optional metadata fields if present
+      if (
+        metadata.category !== undefined &&
+        typeof metadata.category !== 'string'
+      ) {
+        throw new Error('Filter metadata "category" must be a string');
+      }
+
+      if (metadata.category !== undefined && metadata.category.trim().length === 0) {
+        throw new Error('Filter metadata "category" cannot be empty');
+      }
+
+      if (
+        metadata.configSchema !== undefined &&
+        typeof metadata.configSchema !== 'function'
+      ) {
+        throw new Error(
+          'Filter metadata "configSchema" must be a function'
+        );
+      }
+
+      if (metadata.example !== undefined) {
+        // Validate example is a valid FilterConfig (has type field)
+        if (
+          typeof metadata.example !== 'object' ||
+          metadata.example === null ||
+          Array.isArray(metadata.example)
+        ) {
+          throw new Error(
+            'Filter metadata "example" must be a valid FilterConfig object'
+          );
+        }
+
+        if (!('type' in metadata.example)) {
+          throw new Error(
+            'Filter metadata "example" must have a "type" field'
+          );
+        }
+
+        if (typeof metadata.example.type !== 'string') {
+          throw new Error(
+            'Filter metadata "example.type" must be a string'
+          );
+        }
+      }
+    }
+
+    // Check if type is already registered (after validation)
     if (this.factories.has(type)) {
       throw new Error(`Filter type '${type}' is already registered`);
     }

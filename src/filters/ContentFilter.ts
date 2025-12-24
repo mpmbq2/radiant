@@ -1,6 +1,7 @@
 import type { Note, NoteWithContent } from '../types';
 import {
   FilterInterface,
+  BaseFilterConfig,
   FilterConfig,
   FilterValidationResult,
   validationSuccess,
@@ -11,7 +12,7 @@ import { FilterType, ComparisonOperator } from './types';
 /**
  * Configuration for ContentFilter
  */
-export interface ContentFilterConfig extends FilterConfig {
+export interface ContentFilterConfig extends BaseFilterConfig {
   type: typeof FilterType.CONTENT;
 
   /** Search query (text or regex pattern) */
@@ -192,9 +193,9 @@ export class ContentFilter extends FilterInterface {
     const title = note.title || '';
     const content = note.content || '';
 
-    const titleMatches = this.config.searchTitle && this.matchesTitle(title);
+    const titleMatches = !!this.config.searchTitle && this.matchesTitle(title);
     const contentMatches =
-      this.config.searchContent && this.matchesText(content);
+      !!this.config.searchContent && this.matchesText(content);
 
     // Return true if either field matches (OR logic)
     return titleMatches || contentMatches;

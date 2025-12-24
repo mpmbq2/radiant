@@ -37,6 +37,7 @@ export {
   validationFailure,
 } from './FilterInterface';
 export type {
+  BaseFilterConfig,
   FilterConfig,
   FilterValidationResult,
   FilterFactory,

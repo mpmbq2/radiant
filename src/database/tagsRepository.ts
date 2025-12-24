@@ -6,6 +6,7 @@ import {
   validateTagName,
   validateNoteId,
   validateTags,
+  sanitizeTagName,
 } from '../utils/validation';
 
 const logger = createLogger('TagsRepository');
@@ -105,10 +106,12 @@ export class TagsRepository {
    */
   getOrCreateTag(tagName: string): Tag {
     try {
-      // Validate input
-      validateTagName(tagName);
+      // Sanitize input first to ensure consistent formatting
+      const sanitized = sanitizeTagName(tagName);
 
-      const normalized = tagName.toLowerCase().trim();
+      // Validate sanitized input
+      validateTagName(sanitized);
+
       const now = Date.now();
 
       // Wrap in transaction to prevent race conditions
@@ -134,7 +137,7 @@ export class TagsRepository {
         }
       );
 
-      return getOrCreateTransaction(normalized, now);
+      return getOrCreateTransaction(sanitized, now);
     } catch (error) {
       if (error instanceof Error) {
         logger.error(`Error getting or creating tag "${tagName}":`, error);
@@ -262,10 +265,11 @@ export class TagsRepository {
    */
   getNotesWithTag(tagName: string): string[] {
     try {
-      // Validate input
-      validateTagName(tagName);
+      // Sanitize input first
+      const sanitized = sanitizeTagName(tagName);
 
-      const normalized = tagName.toLowerCase().trim();
+      // Validate sanitized input
+      validateTagName(sanitized);
 
       const result = this.db
         .prepare(
@@ -276,7 +280,7 @@ export class TagsRepository {
         WHERE t.name = ?
       `
         )
-        .all(normalized) as { note_id: string }[];
+        .all(sanitized) as { note_id: string }[];
 
       return result.map((r) => r.note_id);
     } catch (error) {

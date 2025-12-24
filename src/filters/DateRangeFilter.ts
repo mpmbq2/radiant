@@ -1,17 +1,32 @@
 import type { Note, NoteWithContent } from '../types';
 import {
   FilterInterface,
+  BaseFilterConfig,
   FilterConfig,
   FilterValidationResult,
   validationSuccess,
   validationFailure,
 } from './FilterInterface';
 import { FilterType, DateRangePreset, DateField } from './types';
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  subDays,
+  subWeeks,
+  subMonths,
+  subYears,
+} from 'date-fns';
 
 /**
  * Configuration for DateRangeFilter
  */
-export interface DateRangeFilterConfig extends FilterConfig {
+export interface DateRangeFilterConfig extends BaseFilterConfig {
   type: typeof FilterType.DATE_RANGE;
 
   /** Which date field to filter on */
@@ -185,6 +200,10 @@ export class DateRangeFilter extends FilterInterface {
 
   /**
    * Check if a timestamp is within the configured range
+   *
+   * Range comparisons are inclusive: [start, end]
+   * - timestamp >= start (if start is defined)
+   * - timestamp <= end (if end is defined)
    */
   private isInRange(timestamp: number): boolean {
     const { start, end } = this.getEffectiveRange();
@@ -202,104 +221,141 @@ export class DateRangeFilter extends FilterInterface {
 
   /**
    * Get the effective start/end timestamps based on preset or custom range
+   *
+   * Returns timestamps in MILLISECONDS to match the database format.
+   * Custom config values (in seconds) are converted to milliseconds.
    */
   private getEffectiveRange(): { start?: number; end?: number } {
-    // If using preset, calculate range
+    // If using preset, calculate range (returns milliseconds)
     if (this.config.preset && this.config.preset !== DateRangePreset.CUSTOM) {
       return this.calculatePresetRange(this.config.preset);
     }
 
-    // Otherwise use custom start/end
+    // Convert custom start/end from seconds to milliseconds for comparison with database timestamps
     return {
-      start: this.config.start,
-      end: this.config.end,
+      start: this.config.start !== undefined ? this.config.start * 1000 : undefined,
+      end: this.config.end !== undefined ? this.config.end * 1000 : undefined,
     };
   }
 
   /**
    * Calculate timestamp range for a preset
+   *
+   * Uses date-fns for robust date handling that properly accounts for:
+   * - DST transitions (days can be 23 or 25 hours)
+   * - Timezone offsets
+   * - Leap years
+   * - Month boundaries
+   *
+   * Returns timestamps in MILLISECONDS to match database format.
+   * All ranges are inclusive [start, end] using start-of-day and end-of-day.
    */
   private calculatePresetRange(preset: DateRangePreset): {
     start?: number;
     end?: number;
   } {
-    const now = Date.now();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const todayStart = Math.floor(today.getTime() / 1000);
-    const nowSec = Math.floor(now / 1000);
+    const now = new Date();
 
     switch (preset) {
       case DateRangePreset.TODAY:
-        return { start: todayStart, end: nowSec };
+        // From start of today to end of today (inclusive full day)
+        return {
+          start: startOfDay(now).getTime(),
+          end: endOfDay(now).getTime(),
+        };
 
       case DateRangePreset.YESTERDAY: {
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStart = Math.floor(yesterday.getTime() / 1000);
-        return { start: yesterdayStart, end: todayStart };
+        // Full day yesterday (start to end)
+        const yesterday = subDays(now, 1);
+        return {
+          start: startOfDay(yesterday).getTime(),
+          end: endOfDay(yesterday).getTime(),
+        };
       }
 
-      case DateRangePreset.LAST_7_DAYS:
-        return { start: nowSec - 7 * 24 * 60 * 60, end: nowSec };
+      case DateRangePreset.LAST_7_DAYS: {
+        // Last 7 complete days including today
+        // Using subDays properly handles DST transitions
+        const weekAgo = subDays(now, 6); // 6 days ago + today = 7 days
+        return {
+          start: startOfDay(weekAgo).getTime(),
+          end: endOfDay(now).getTime(),
+        };
+      }
 
-      case DateRangePreset.LAST_30_DAYS:
-        return { start: nowSec - 30 * 24 * 60 * 60, end: nowSec };
+      case DateRangePreset.LAST_30_DAYS: {
+        // Last 30 complete days including today
+        const monthAgo = subDays(now, 29); // 29 days ago + today = 30 days
+        return {
+          start: startOfDay(monthAgo).getTime(),
+          end: endOfDay(now).getTime(),
+        };
+      }
 
-      case DateRangePreset.LAST_90_DAYS:
-        return { start: nowSec - 90 * 24 * 60 * 60, end: nowSec };
+      case DateRangePreset.LAST_90_DAYS: {
+        // Last 90 complete days including today
+        const quarterAgo = subDays(now, 89); // 89 days ago + today = 90 days
+        return {
+          start: startOfDay(quarterAgo).getTime(),
+          end: endOfDay(now).getTime(),
+        };
+      }
 
       case DateRangePreset.THIS_WEEK: {
-        const weekStart = new Date(today);
-        const dayOfWeek = weekStart.getDay();
-        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday as start
-        weekStart.setDate(weekStart.getDate() - diff);
-        return { start: Math.floor(weekStart.getTime() / 1000), end: nowSec };
+        // Current week (Monday-Sunday) up to end of today
+        // weekStartsOn: 1 means Monday
+        const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+        return {
+          start: weekStart.getTime(),
+          end: endOfDay(now).getTime(),
+        };
       }
 
       case DateRangePreset.LAST_WEEK: {
-        const weekStart = new Date(today);
-        const dayOfWeek = weekStart.getDay();
-        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        weekStart.setDate(weekStart.getDate() - diff - 7);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 7);
+        // Complete previous week (Monday-Sunday)
+        const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+        const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
         return {
-          start: Math.floor(weekStart.getTime() / 1000),
-          end: Math.floor(weekEnd.getTime() / 1000),
+          start: lastWeekStart.getTime(),
+          end: lastWeekEnd.getTime(),
         };
       }
 
       case DateRangePreset.THIS_MONTH: {
-        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        return { start: Math.floor(monthStart.getTime() / 1000), end: nowSec };
+        // Current month from 1st to end of today
+        const monthStart = startOfMonth(now);
+        return {
+          start: monthStart.getTime(),
+          end: endOfDay(now).getTime(),
+        };
       }
 
       case DateRangePreset.LAST_MONTH: {
-        const lastMonthStart = new Date(
-          today.getFullYear(),
-          today.getMonth() - 1,
-          1
-        );
-        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 1);
+        // Complete previous month
+        // subMonths properly handles month boundaries and leap years
+        const lastMonthDate = subMonths(now, 1);
         return {
-          start: Math.floor(lastMonthStart.getTime() / 1000),
-          end: Math.floor(lastMonthEnd.getTime() / 1000),
+          start: startOfMonth(lastMonthDate).getTime(),
+          end: endOfMonth(lastMonthDate).getTime(),
         };
       }
 
       case DateRangePreset.THIS_YEAR: {
-        const yearStart = new Date(today.getFullYear(), 0, 1);
-        return { start: Math.floor(yearStart.getTime() / 1000), end: nowSec };
+        // Current year from Jan 1 to end of today
+        const yearStart = startOfYear(now);
+        return {
+          start: yearStart.getTime(),
+          end: endOfDay(now).getTime(),
+        };
       }
 
       case DateRangePreset.LAST_YEAR: {
-        const lastYearStart = new Date(today.getFullYear() - 1, 0, 1);
-        const lastYearEnd = new Date(today.getFullYear(), 0, 1);
+        // Complete previous year (Jan 1 - Dec 31)
+        // Properly handles leap years
+        const lastYearDate = subYears(now, 1);
         return {
-          start: Math.floor(lastYearStart.getTime() / 1000),
-          end: Math.floor(lastYearEnd.getTime() / 1000),
+          start: startOfYear(lastYearDate).getTime(),
+          end: endOfYear(lastYearDate).getTime(),
         };
       }
 

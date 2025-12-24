@@ -1,6 +1,7 @@
 import type { Note, NoteWithContent } from '../types';
 import {
   FilterInterface,
+  BaseFilterConfig,
   FilterConfig,
   FilterValidationResult,
   validationSuccess,
@@ -11,7 +12,7 @@ import { FilterType, LogicalOperator } from './types';
 /**
  * Configuration for TagFilter
  */
-export interface TagFilterConfig extends FilterConfig {
+export interface TagFilterConfig extends BaseFilterConfig {
   type: typeof FilterType.TAG;
 
   /** Tags to match (OR by default, AND if operator is set) */
