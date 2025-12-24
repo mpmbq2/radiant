@@ -16,14 +16,19 @@ export class PreferencesRepository {
    */
   getPreference(key: string): string | null {
     try {
-      const stmt = this.db.prepare('SELECT value FROM preferences WHERE key = ?');
+      const stmt = this.db.prepare(
+        'SELECT value FROM preferences WHERE key = ?'
+      );
       const result = stmt.get(key) as { value: string } | undefined;
       return result ? result.value : null;
     } catch (error) {
       if (error instanceof Error) {
         logger.error(`Error getting preference "${key}":`, error);
       } else {
-        logger.error(`Error getting preference "${key}":`, new Error(String(error)));
+        logger.error(
+          `Error getting preference "${key}":`,
+          new Error(String(error))
+        );
       }
       throw error;
     }
@@ -44,7 +49,10 @@ export class PreferencesRepository {
       if (error instanceof Error) {
         logger.error(`Error setting preference "${key}":`, error);
       } else {
-        logger.error(`Error setting preference "${key}":`, new Error(String(error)));
+        logger.error(
+          `Error setting preference "${key}":`,
+          new Error(String(error))
+        );
       }
       throw error;
     }
@@ -68,7 +76,10 @@ export class PreferencesRepository {
       if (error instanceof Error) {
         logger.error('Error getting all preferences:', error);
       } else {
-        logger.error('Error getting all preferences:', new Error(String(error)));
+        logger.error(
+          'Error getting all preferences:',
+          new Error(String(error))
+        );
       }
       throw error;
     }
@@ -85,7 +96,10 @@ export class PreferencesRepository {
       if (error instanceof Error) {
         logger.error(`Error deleting preference "${key}":`, error);
       } else {
-        logger.error(`Error deleting preference "${key}":`, new Error(String(error)));
+        logger.error(
+          `Error deleting preference "${key}":`,
+          new Error(String(error))
+        );
       }
       throw error;
     }

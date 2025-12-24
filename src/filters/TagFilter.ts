@@ -61,16 +61,17 @@ export class TagFilter extends FilterInterface {
       type: FilterType.TAG,
       ...config,
       operator: config.operator || LogicalOperator.OR,
-      caseSensitive: config.caseSensitive !== undefined ? config.caseSensitive : false,
+      caseSensitive:
+        config.caseSensitive !== undefined ? config.caseSensitive : false,
     };
   }
 
   apply(notes: Note[]): Note[] {
-    return notes.filter(note => this.matches(note));
+    return notes.filter((note) => this.matches(note));
   }
 
   applyWithContent(notes: NoteWithContent[]): NoteWithContent[] {
-    return notes.filter(note => this.matchesWithContent(note));
+    return notes.filter((note) => this.matchesWithContent(note));
   }
 
   serialize(): FilterConfig {
@@ -117,20 +118,25 @@ export class TagFilter extends FilterInterface {
       errors.push('Operator must be AND or OR for TagFilter');
     }
 
-    return errors.length === 0 ? validationSuccess() : validationFailure(errors);
+    return errors.length === 0
+      ? validationSuccess()
+      : validationFailure(errors);
   }
 
   getDescription(): string {
     const parts: string[] = [];
 
     if (this.config.tags && this.config.tags.length > 0) {
-      const tagList = this.config.tags.map(t => `'${t}'`).join(', ');
-      const operator = this.config.operator === LogicalOperator.AND ? 'all of' : 'any of';
+      const tagList = this.config.tags.map((t) => `'${t}'`).join(', ');
+      const operator =
+        this.config.operator === LogicalOperator.AND ? 'all of' : 'any of';
       parts.push(`tagged with ${operator}: ${tagList}`);
     }
 
     if (this.config.excludeTags && this.config.excludeTags.length > 0) {
-      const excludeList = this.config.excludeTags.map(t => `'${t}'`).join(', ');
+      const excludeList = this.config.excludeTags
+        .map((t) => `'${t}'`)
+        .join(', ');
       parts.push(`excluding: ${excludeList}`);
     }
 
@@ -141,7 +147,9 @@ export class TagFilter extends FilterInterface {
     return new TagFilter({
       ...this.config,
       tags: [...this.config.tags],
-      excludeTags: this.config.excludeTags ? [...this.config.excludeTags] : undefined,
+      excludeTags: this.config.excludeTags
+        ? [...this.config.excludeTags]
+        : undefined,
     });
   }
 
@@ -160,13 +168,13 @@ export class TagFilter extends FilterInterface {
     // Normalize tags for comparison
     const normalizedNoteTags = this.config.caseSensitive
       ? noteTags
-      : noteTags.map(t => t.toLowerCase());
+      : noteTags.map((t) => t.toLowerCase());
 
     // Check exclude tags first (short-circuit if any match)
     if (this.config.excludeTags && this.config.excludeTags.length > 0) {
       const normalizedExcludeTags = this.config.caseSensitive
         ? this.config.excludeTags
-        : this.config.excludeTags.map(t => t.toLowerCase());
+        : this.config.excludeTags.map((t) => t.toLowerCase());
 
       for (const excludeTag of normalizedExcludeTags) {
         if (normalizedNoteTags.includes(excludeTag)) {
@@ -183,17 +191,17 @@ export class TagFilter extends FilterInterface {
     // Normalize filter tags
     const normalizedFilterTags = this.config.caseSensitive
       ? this.config.tags
-      : this.config.tags.map(t => t.toLowerCase());
+      : this.config.tags.map((t) => t.toLowerCase());
 
     // Apply operator logic
     if (this.config.operator === LogicalOperator.AND) {
       // ALL filter tags must be present in note tags
-      return normalizedFilterTags.every(filterTag =>
+      return normalizedFilterTags.every((filterTag) =>
         normalizedNoteTags.includes(filterTag)
       );
     } else {
       // OR logic (default): ANY filter tag must be present
-      return normalizedFilterTags.some(filterTag =>
+      return normalizedFilterTags.some((filterTag) =>
         normalizedNoteTags.includes(filterTag)
       );
     }

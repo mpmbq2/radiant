@@ -48,15 +48,12 @@ describe('TagFilter', () => {
 
       const result = filter.apply(notes);
       expect(result).toHaveLength(2);
-      expect(result.map(n => n.id)).toEqual(['1', '3']);
+      expect(result.map((n) => n.id)).toEqual(['1', '3']);
     });
 
     it('should return empty array when no matches', () => {
       const filter = new TagFilter({ tags: ['nonexistent'] });
-      const notes = [
-        createNote('1', ['work']),
-        createNote('2', ['personal']),
-      ];
+      const notes = [createNote('1', ['work']), createNote('2', ['personal'])];
 
       const result = filter.apply(notes);
       expect(result).toHaveLength(0);
@@ -78,7 +75,7 @@ describe('TagFilter', () => {
 
       const result = filter.apply(notes);
       expect(result).toHaveLength(3);
-      expect(result.map(n => n.id)).toEqual(['1', '2', '4']);
+      expect(result.map((n) => n.id)).toEqual(['1', '2', '4']);
     });
   });
 
@@ -97,7 +94,7 @@ describe('TagFilter', () => {
 
       const result = filter.apply(notes);
       expect(result).toHaveLength(2);
-      expect(result.map(n => n.id)).toEqual(['3', '4']);
+      expect(result.map((n) => n.id)).toEqual(['3', '4']);
     });
 
     it('should not match notes with only some tags', () => {
@@ -146,7 +143,7 @@ describe('TagFilter', () => {
 
       const result = filter.apply(notes);
       expect(result).toHaveLength(2);
-      expect(result.map(n => n.id)).toEqual(['1', '3']);
+      expect(result.map((n) => n.id)).toEqual(['1', '3']);
     });
   });
 
@@ -218,7 +215,9 @@ describe('TagFilter', () => {
         tags: ['work', 'urgent'],
         operator: LogicalOperator.AND,
       });
-      expect(filter.getDescription()).toBe("Notes tagged with all of: 'work', 'urgent'");
+      expect(filter.getDescription()).toBe(
+        "Notes tagged with all of: 'work', 'urgent'"
+      );
     });
 
     it('should describe filter with exclusions', () => {

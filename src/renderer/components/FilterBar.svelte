@@ -31,7 +31,13 @@
   });
 
   async function loadTags() {
-    allTags = await window.electronAPI.notes.getAllTags();
+    const response = await window.electronAPI.notes.getAllTags();
+    if (response.success) {
+      allTags = response.data;
+    } else {
+      console.error('Failed to load tags:', response.error.message);
+      allTags = [];
+    }
   }
 
   function toggleFilterMenu() {

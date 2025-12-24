@@ -94,16 +94,48 @@ export interface NoteFrontmatter {
 // ============================================================================
 
 /**
+ * Serializable error object for IPC communication
+ */
+export interface IPCError {
+  message: string;
+  code?: string;
+  stack?: string;
+}
+
+/**
+ * Success response wrapper for IPC handlers
+ */
+export interface IPCSuccessResponse<T> {
+  success: true;
+  data: T;
+}
+
+/**
+ * Error response wrapper for IPC handlers
+ */
+export interface IPCErrorResponse {
+  success: false;
+  error: IPCError;
+}
+
+/**
+ * Generic IPC response type (success or error)
+ */
+export type IPCResponse<T> = IPCSuccessResponse<T> | IPCErrorResponse;
+
+/**
  * Notes API exposed to renderer via IPC
  */
 export interface NotesAPI {
-  create: (input: CreateNoteInput) => Promise<NoteWithContent>;
-  getById: (noteId: string) => Promise<NoteWithContent | null>;
-  getAll: () => Promise<NoteWithContent[]>;
-  update: (input: UpdateNoteInput) => Promise<NoteWithContent | null>;
-  delete: (noteId: string) => Promise<void>;
-  search: (query: string) => Promise<NoteWithContent[]>;
-  getAllTags: () => Promise<string[]>;
+  create: (input: CreateNoteInput) => Promise<IPCResponse<NoteWithContent>>;
+  getById: (noteId: string) => Promise<IPCResponse<NoteWithContent | null>>;
+  getAll: () => Promise<IPCResponse<NoteWithContent[]>>;
+  update: (
+    input: UpdateNoteInput
+  ) => Promise<IPCResponse<NoteWithContent | null>>;
+  delete: (noteId: string) => Promise<IPCResponse<void>>;
+  search: (query: string) => Promise<IPCResponse<NoteWithContent[]>>;
+  getAllTags: () => Promise<IPCResponse<string[]>>;
 }
 
 /**
@@ -111,8 +143,8 @@ export interface NotesAPI {
  */
 export interface ElectronAPI {
   notes: NotesAPI;
-  getTheme: () => Promise<string>;
-  setTheme: (theme: string) => Promise<void>;
+  getTheme: () => Promise<IPCResponse<string>>;
+  setTheme: (theme: string) => Promise<IPCResponse<void>>;
 }
 
 // ============================================================================
