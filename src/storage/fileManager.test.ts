@@ -497,7 +497,7 @@ describe('FileManager', () => {
           FileSystemError
         );
         expect(() => fullDiskFileManager.generateFilePath(testUuid)).toThrow(
-          /Insufficient disk space/
+          /Disk full/
         );
       });
     });
