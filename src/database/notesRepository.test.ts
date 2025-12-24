@@ -94,17 +94,37 @@ describe('NotesRepository', () => {
     });
 
     it('should return all non-deleted notes', () => {
-      repository.createNote('650e8400-e29b-41d4-a716-446655440001', 'Note 1', '/path/1.md');
-      repository.createNote('650e8400-e29b-41d4-a716-446655440002', 'Note 2', '/path/2.md');
-      repository.createNote('650e8400-e29b-41d4-a716-446655440003', 'Note 3', '/path/3.md');
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440001',
+        'Note 1',
+        '/path/1.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440002',
+        'Note 2',
+        '/path/2.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440003',
+        'Note 3',
+        '/path/3.md'
+      );
 
       const notes = repository.getAllNotes();
       expect(notes).toHaveLength(3);
     });
 
     it('should not include deleted notes', () => {
-      repository.createNote('650e8400-e29b-41d4-a716-446655440001', 'Note 1', '/path/1.md');
-      repository.createNote('650e8400-e29b-41d4-a716-446655440002', 'Note 2', '/path/2.md');
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440001',
+        'Note 1',
+        '/path/1.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440002',
+        'Note 2',
+        '/path/2.md'
+      );
       repository.deleteNote('650e8400-e29b-41d4-a716-446655440002');
 
       const notes = repository.getAllNotes();
@@ -114,11 +134,21 @@ describe('NotesRepository', () => {
 
     it('should order notes by modified_at descending', () => {
       // Create notes with slight time delay to ensure different timestamps
-      const note1 = repository.createNote('650e8400-e29b-41d4-a716-446655440001', 'Note 1', '/path/1.md');
-      const note2 = repository.createNote('650e8400-e29b-41d4-a716-446655440002', 'Note 2', '/path/2.md');
+      const note1 = repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440001',
+        'Note 1',
+        '/path/1.md'
+      );
+      const note2 = repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440002',
+        'Note 2',
+        '/path/2.md'
+      );
 
       // Update note 1 to make it most recent
-      repository.updateNote('650e8400-e29b-41d4-a716-446655440001', { title: 'Updated Note 1' });
+      repository.updateNote('650e8400-e29b-41d4-a716-446655440001', {
+        title: 'Updated Note 1',
+      });
 
       const notes = repository.getAllNotes();
       expect(notes[0].id).toBe('650e8400-e29b-41d4-a716-446655440001');
@@ -237,9 +267,21 @@ describe('NotesRepository', () => {
 
   describe('searchNotesByTitle', () => {
     beforeEach(() => {
-      repository.createNote('650e8400-e29b-41d4-a716-446655440001', 'JavaScript Tutorial', '/path/1.md');
-      repository.createNote('650e8400-e29b-41d4-a716-446655440002', 'TypeScript Guide', '/path/2.md');
-      repository.createNote('650e8400-e29b-41d4-a716-446655440003', 'Script Writing Tips', '/path/3.md');
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440001',
+        'JavaScript Tutorial',
+        '/path/1.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440002',
+        'TypeScript Guide',
+        '/path/2.md'
+      );
+      repository.createNote(
+        '650e8400-e29b-41d4-a716-446655440003',
+        'Script Writing Tips',
+        '/path/3.md'
+      );
     });
 
     it('should find notes matching query', () => {

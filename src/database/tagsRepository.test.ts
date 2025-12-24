@@ -118,7 +118,11 @@ describe('TagsRepository', () => {
 
   describe('getTagsForNote', () => {
     it('should return empty array for note with no tags', () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       const tags = repository.getTagsForNote(testNoteId1);
       expect(tags).toEqual([]);
     });
@@ -130,7 +134,11 @@ describe('TagsRepository', () => {
     });
 
     it('should return tags associated with a note', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       await repository.setTagsForNote(testNoteId1, [
         'JavaScript',
         'TypeScript',
@@ -143,7 +151,11 @@ describe('TagsRepository', () => {
     });
 
     it('should return tags in alphabetical order', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       await repository.setTagsForNote(testNoteId1, [
         'Zebra',
         'Apple',
@@ -159,7 +171,11 @@ describe('TagsRepository', () => {
 
   describe('setTagsForNote', () => {
     it('should add tags to a note', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       await repository.setTagsForNote(testNoteId1, ['JavaScript', 'React']);
 
       const tags = repository.getTagsForNote(testNoteId1);
@@ -169,7 +185,11 @@ describe('TagsRepository', () => {
     });
 
     it('should replace existing tags', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       await repository.setTagsForNote(testNoteId1, ['JavaScript', 'React']);
       await repository.setTagsForNote(testNoteId1, ['TypeScript', 'Vue']);
 
@@ -182,7 +202,11 @@ describe('TagsRepository', () => {
     });
 
     it('should handle empty tag array', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       await repository.setTagsForNote(testNoteId1, ['JavaScript']);
       await repository.setTagsForNote(testNoteId1, []);
 
@@ -191,7 +215,11 @@ describe('TagsRepository', () => {
     });
 
     it('should create new tags as needed', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       const allTagsBefore = repository.getAllTags();
       expect(allTagsBefore).toHaveLength(0);
 
@@ -202,7 +230,11 @@ describe('TagsRepository', () => {
     });
 
     it('should normalize tag names when setting', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       await repository.setTagsForNote(testNoteId1, [
         '  JavaScript  ',
         'TYPESCRIPT',
@@ -214,7 +246,11 @@ describe('TagsRepository', () => {
     });
 
     it('should handle duplicate tag names in input', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
 
       // The function should deduplicate normalized tags
       // After normalization, all three become 'javascript'
@@ -226,7 +262,10 @@ describe('TagsRepository', () => {
       expect(tags[0]).toBe('javascript');
 
       // Verify that calling again with the same tag (different case) replaces correctly
-      await repository.setTagsForNote(testNoteId1, ['JAVASCRIPT', 'TypeScript']);
+      await repository.setTagsForNote(testNoteId1, [
+        'JAVASCRIPT',
+        'TypeScript',
+      ]);
       const updatedTags = repository.getTagsForNote(testNoteId1);
       expect(updatedTags).toHaveLength(2);
       expect(updatedTags).toContain('javascript');
@@ -236,9 +275,21 @@ describe('TagsRepository', () => {
 
   describe('getNotesWithTag', () => {
     beforeEach(() => {
-      notesRepository.createNote(testNoteId1, 'Note 1', '/tmp/radiant-test-userData/notes/1.md');
-      notesRepository.createNote(testNoteId2, 'Note 2', '/tmp/radiant-test-userData/notes/2.md');
-      notesRepository.createNote(testNoteId3, 'Note 3', '/tmp/radiant-test-userData/notes/3.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Note 1',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
+      notesRepository.createNote(
+        testNoteId2,
+        'Note 2',
+        '/tmp/radiant-test-userData/notes/2.md'
+      );
+      notesRepository.createNote(
+        testNoteId3,
+        'Note 3',
+        '/tmp/radiant-test-userData/notes/3.md'
+      );
     });
 
     it('should return empty array for tag with no notes', () => {
@@ -248,7 +299,10 @@ describe('TagsRepository', () => {
 
     it('should return notes associated with a tag', async () => {
       await repository.setTagsForNote(testNoteId1, ['JavaScript']);
-      await repository.setTagsForNote(testNoteId2, ['JavaScript', 'TypeScript']);
+      await repository.setTagsForNote(testNoteId2, [
+        'JavaScript',
+        'TypeScript',
+      ]);
 
       const noteIds = repository.getNotesWithTag('JavaScript');
       expect(noteIds).toHaveLength(2);
@@ -284,8 +338,15 @@ describe('TagsRepository', () => {
 
   describe('deleteUnusedTags', () => {
     it('should return 0 when all tags are in use', async () => {
-      notesRepository.createNote(testNoteId1, 'Note 1', '/tmp/radiant-test-userData/notes/1.md');
-      await repository.setTagsForNote(testNoteId1, ['JavaScript', 'TypeScript']);
+      notesRepository.createNote(
+        testNoteId1,
+        'Note 1',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
+      await repository.setTagsForNote(testNoteId1, [
+        'JavaScript',
+        'TypeScript',
+      ]);
 
       const deleted = repository.deleteUnusedTags();
       expect(deleted).toBe(0);
@@ -298,7 +359,11 @@ describe('TagsRepository', () => {
       repository.getOrCreateTag('React');
 
       // Associate only one tag
-      notesRepository.createNote(testNoteId1, 'Note 1', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Note 1',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
       await repository.setTagsForNote(testNoteId1, ['JavaScript']);
 
       const deleted = repository.deleteUnusedTags();
@@ -310,8 +375,15 @@ describe('TagsRepository', () => {
     });
 
     it('should not delete tags when they become unused after removing note tags', async () => {
-      notesRepository.createNote(testNoteId1, 'Note 1', '/tmp/radiant-test-userData/notes/1.md');
-      await repository.setTagsForNote(testNoteId1, ['JavaScript', 'TypeScript']);
+      notesRepository.createNote(
+        testNoteId1,
+        'Note 1',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
+      await repository.setTagsForNote(testNoteId1, [
+        'JavaScript',
+        'TypeScript',
+      ]);
       await repository.setTagsForNote(testNoteId1, ['React']); // Replace tags
 
       // Manual cleanup required
@@ -347,8 +419,15 @@ describe('TagsRepository', () => {
 
     it('should rollback transaction on error - no partial state', async () => {
       // Create a note and give it initial tags
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
-      await repository.setTagsForNote(testNoteId1, ['JavaScript', 'TypeScript']);
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
+      await repository.setTagsForNote(testNoteId1, [
+        'JavaScript',
+        'TypeScript',
+      ]);
 
       // Verify initial state
       expect(repository.getTagsForNote(testNoteId1)).toHaveLength(2);
@@ -377,13 +456,20 @@ describe('TagsRepository', () => {
       expect(tagsAfterError).toHaveLength(2);
       expect(tagsAfterError).toContain('javascript');
       expect(tagsAfterError).toContain('typescript');
-
     });
 
     it('should maintain database consistency after transaction failure', async () => {
       // Create multiple notes with tags
-      notesRepository.createNote(testNoteId1, 'Note 1', '/tmp/radiant-test-userData/notes/1.md');
-      notesRepository.createNote(testNoteId2, 'Note 2', '/tmp/radiant-test-userData/notes/2.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Note 1',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
+      notesRepository.createNote(
+        testNoteId2,
+        'Note 2',
+        '/tmp/radiant-test-userData/notes/2.md'
+      );
       await repository.setTagsForNote(testNoteId1, ['JavaScript']);
       await repository.setTagsForNote(testNoteId2, ['TypeScript']);
 
@@ -409,11 +495,14 @@ describe('TagsRepository', () => {
       // Verify tag table is still consistent
       const tagsAfter = repository.getAllTags();
       expect(tagsAfter).toHaveLength(2);
-
     });
 
     it('should successfully complete transaction after temporary database lock', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
 
       // Mock a temporary SQLITE_BUSY error followed by success
       const originalGetOrCreate = repository.getOrCreateTag.bind(repository);
@@ -445,11 +534,14 @@ describe('TagsRepository', () => {
 
       // Verify retry happened
       expect(attemptCount).toBe(2);
-
     });
 
     it('should fail after max retries on persistent database lock', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
 
       // Mock persistent SQLITE_BUSY error
       vi.spyOn(repository, 'getOrCreateTag').mockImplementation(() => {
@@ -468,11 +560,14 @@ describe('TagsRepository', () => {
       // Verify no tags were set due to transaction rollback
       const tags = repository.getTagsForNote(testNoteId1);
       expect(tags).toHaveLength(0);
-
     });
 
     it('should handle SQLITE_LOCKED error with retry logic', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
 
       // Mock a temporary SQLITE_LOCKED error followed by success
       const originalGetOrCreate = repository.getOrCreateTag.bind(repository);
@@ -501,11 +596,14 @@ describe('TagsRepository', () => {
       const tags = repository.getTagsForNote(testNoteId1);
       expect(tags).toHaveLength(1);
       expect(tags[0]).toBe('typescript');
-
     });
 
     it('should not retry on non-retriable errors', async () => {
-      notesRepository.createNote(testNoteId1, 'Test Note', '/tmp/radiant-test-userData/notes/1.md');
+      notesRepository.createNote(
+        testNoteId1,
+        'Test Note',
+        '/tmp/radiant-test-userData/notes/1.md'
+      );
 
       // Mock a non-retriable error (e.g., syntax error)
       let attemptCount = 0;
@@ -523,7 +621,6 @@ describe('TagsRepository', () => {
 
       // Verify only one attempt was made
       expect(attemptCount).toBe(1);
-
     });
   });
 });

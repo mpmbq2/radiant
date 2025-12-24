@@ -275,12 +275,16 @@ describe('FileManager', () => {
     });
 
     it('should only return .md files', () => {
-      fileManager.writeNote(fileManager.generateFilePath('750e8400-e29b-41d4-a716-446655440001'), 'Content', {
-        title: 'Note 1',
-        tags: [],
-        created_at: Date.now(),
-        modified_at: Date.now(),
-      });
+      fileManager.writeNote(
+        fileManager.generateFilePath('750e8400-e29b-41d4-a716-446655440001'),
+        'Content',
+        {
+          title: 'Note 1',
+          tags: [],
+          created_at: Date.now(),
+          modified_at: Date.now(),
+        }
+      );
 
       // Create a non-markdown file
       fs.writeFileSync(path.join(testDir, 'not-a-note.txt'), 'Text file');
@@ -501,7 +505,7 @@ describe('FileManager', () => {
         vi.restoreAllMocks();
       });
 
-      it('should throw FileSystemError with INVALID_PATH when writing with relative path', () => {
+      it('should reject relative paths when writing files', () => {
         const relativePath = 'relative/path/note.md';
         const frontmatter = {
           title: 'Test',
@@ -510,31 +514,29 @@ describe('FileManager', () => {
           modified_at: Date.now(),
         };
 
+        // Validation should reject relative paths
         expect(() =>
           fileManager.writeNote(relativePath, 'Content', frontmatter)
-        ).toThrow(FileSystemError);
-        expect(() =>
-          fileManager.writeNote(relativePath, 'Content', frontmatter)
-        ).toThrow(/Invalid path/);
+        ).toThrow(/File path must be absolute/);
       });
 
-      it('should handle path traversal attempts safely', () => {
+      it('should reject path traversal attempts via UUID validation', () => {
         const maliciousId = '../../../etc/passwd';
-        const filePath = fileManager.generateFilePath(maliciousId);
 
-        // Verify the path is still within the test directory
-        expect(filePath).toContain(testDir);
-        expect(path.isAbsolute(filePath)).toBe(true);
+        // UUID validation should reject path traversal attempts
+        expect(() => fileManager.generateFilePath(maliciousId)).toThrow(
+          /Note ID must be a valid UUID v4 format/
+        );
       });
 
-      it('should handle invalid characters in note ID', () => {
+      it('should reject invalid characters in note ID via UUID validation', () => {
         const invalidIds = ['note\x00null', 'note\nnewline', 'note\ttab'];
 
         invalidIds.forEach((invalidId) => {
-          const filePath = fileManager.generateFilePath(invalidId);
-          // Should still generate a valid path
-          expect(path.isAbsolute(filePath)).toBe(true);
-          expect(filePath).toContain(testDir);
+          // UUID validation should reject invalid characters
+          expect(() => fileManager.generateFilePath(invalidId)).toThrow(
+            /Note ID must be a valid UUID v4 format/
+          );
         });
       });
     });
@@ -672,7 +674,9 @@ describe('FileManager', () => {
         vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
         expect(() =>
-          failFileManager.generateFilePath('7ba7b810-9dad-41d1-80b4-00c04fd430c9')
+          failFileManager.generateFilePath(
+            '7ba7b810-9dad-41d1-80b4-00c04fd430c9'
+          )
         ).toThrow(/Directory creation failed|Note ID/);
         // Note: The test may throw ValidationError or FileSystemError depending on execution order
       });
