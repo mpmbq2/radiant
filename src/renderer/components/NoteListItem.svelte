@@ -51,8 +51,8 @@
 <div
   class="note-item"
   class:selected={isSelected}
-  on:click={onClick}
-  on:keydown={(e) => e.key === 'Enter' && onClick()}
+  onclick={onClick}
+  onkeydown={(e) => e.key === 'Enter' && onClick()}
   role="button"
   tabindex="0"
 >

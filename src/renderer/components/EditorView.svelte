@@ -15,8 +15,8 @@
     isLoading = state.isLoading;
   });
 
-  let titleInput: HTMLInputElement;
-  let isEditingTitle = false;
+  let titleInput: HTMLInputElement = $state();
+  let isEditingTitle = $state(false);
 
   function handleTitleClick() {
     isEditingTitle = true;
@@ -70,13 +70,13 @@
             type="text"
             class="title-input"
             value={currentNote.title}
-            on:blur={handleTitleBlur}
-            on:keydown={handleTitleKeydown}
+            onblur={handleTitleBlur}
+            onkeydown={handleTitleKeydown}
           />
         {:else}
           <button
             class="note-title"
-            on:click={handleTitleClick}
+            onclick={handleTitleClick}
             title="Click to edit title"
           >
             {currentNote.title || 'Untitled'}
@@ -87,7 +87,7 @@
       <div class="header-actions">
         <button
           class="delete-button"
-          on:click={handleDeleteNote}
+          onclick={handleDeleteNote}
           title="Delete Note"
         >
           <svg

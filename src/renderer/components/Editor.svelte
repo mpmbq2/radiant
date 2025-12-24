@@ -12,9 +12,9 @@
   const logger = createLogger('Editor');
   const store = notesStore;
 
-  let editorElement: HTMLDivElement;
-  let editor: Editor | null = null;
-  let isSaving = false;
+  let editorElement: HTMLDivElement = $state();
+  let editor: Editor | null = $state(null);
+  let isSaving = $state(false);
 
   let currentNote = $state(store.getState().currentNote);
 

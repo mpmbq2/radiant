@@ -18,7 +18,7 @@
     <h1 class="app-title">Radiant</h1>
     <button
       class="new-note-button"
-      on:click={handleNewNote}
+      onclick={handleNewNote}
       title="New Note (Cmd+N)"
     >
       <svg

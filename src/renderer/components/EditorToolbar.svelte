@@ -72,7 +72,7 @@
     <button
       class="toolbar-button"
       class:active={isBold}
-      on:click={toggleBold}
+      onclick={toggleBold}
       title="Bold (Cmd+B)"
     >
       <strong>B</strong>
@@ -80,7 +80,7 @@
     <button
       class="toolbar-button"
       class:active={isItalic}
-      on:click={toggleItalic}
+      onclick={toggleItalic}
       title="Italic (Cmd+I)"
     >
       <em>I</em>
@@ -88,7 +88,7 @@
     <button
       class="toolbar-button"
       class:active={isStrike}
-      on:click={toggleStrike}
+      onclick={toggleStrike}
       title="Strikethrough"
     >
       <s>S</s>
@@ -96,7 +96,7 @@
     <button
       class="toolbar-button"
       class:active={isCode}
-      on:click={toggleCode}
+      onclick={toggleCode}
       title="Inline Code"
     >
       {'</>'}
@@ -109,7 +109,7 @@
     <button
       class="toolbar-button"
       class:active={isH1}
-      on:click={() => setHeading(1)}
+      onclick={() => setHeading(1)}
       title="Heading 1"
     >
       H1
@@ -117,7 +117,7 @@
     <button
       class="toolbar-button"
       class:active={isH2}
-      on:click={() => setHeading(2)}
+      onclick={() => setHeading(2)}
       title="Heading 2"
     >
       H2
@@ -125,7 +125,7 @@
     <button
       class="toolbar-button"
       class:active={isH3}
-      on:click={() => setHeading(3)}
+      onclick={() => setHeading(3)}
       title="Heading 3"
     >
       H3
@@ -138,7 +138,7 @@
     <button
       class="toolbar-button"
       class:active={isBulletList}
-      on:click={toggleBulletList}
+      onclick={toggleBulletList}
       title="Bullet List"
     >
       •
@@ -146,7 +146,7 @@
     <button
       class="toolbar-button"
       class:active={isOrderedList}
-      on:click={toggleOrderedList}
+      onclick={toggleOrderedList}
       title="Numbered List"
     >
       1.
@@ -154,7 +154,7 @@
     <button
       class="toolbar-button"
       class:active={isBlockquote}
-      on:click={toggleBlockquote}
+      onclick={toggleBlockquote}
       title="Quote"
     >
       "
@@ -162,7 +162,7 @@
     <button
       class="toolbar-button"
       class:active={isCodeBlock}
-      on:click={toggleCodeBlock}
+      onclick={toggleCodeBlock}
       title="Code Block"
     >
       {'{}'}
@@ -174,7 +174,7 @@
   <div class="toolbar-group">
     <button
       class="toolbar-button"
-      on:click={undo}
+      onclick={undo}
       disabled={!canUndo}
       title="Undo (Cmd+Z)"
     >
@@ -182,7 +182,7 @@
     </button>
     <button
       class="toolbar-button"
-      on:click={redo}
+      onclick={redo}
       disabled={!canRedo}
       title="Redo (Cmd+Shift+Z)"
     >

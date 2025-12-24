@@ -162,7 +162,7 @@
   }
 </script>
 
-<svelte:window on:click={handleClickOutside} />
+<svelte:window onclick={handleClickOutside} />
 
 <div class="filter-bar">
   {#if activeFilters.length > 0}
@@ -172,7 +172,7 @@
           <span class="filter-text">{getFilterDisplayText(filter)}</span>
           <button
             class="remove-filter"
-            on:click={() => removeFilter(index)}
+            onclick={() => removeFilter(index)}
             aria-label="Remove filter"
           >
             <svg
@@ -192,17 +192,14 @@
           </button>
         </div>
       {/each}
-      <button class="clear-all-button" on:click={clearAllFilters}>
+      <button class="clear-all-button" onclick={clearAllFilters}>
         Clear all
       </button>
     </div>
   {/if}
 
   <div class="filter-actions">
-    <button
-      class="add-filter-button filter-trigger"
-      on:click={toggleFilterMenu}
-    >
+    <button class="add-filter-button filter-trigger" onclick={toggleFilterMenu}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
@@ -221,15 +218,15 @@
 
     {#if showFilterMenu}
       <div class="filter-menu">
-        <button class="filter-menu-item" on:click={openTagFilterModal}>
+        <button class="filter-menu-item" onclick={openTagFilterModal}>
           <span class="menu-icon">🏷️</span>
           <span>Tag Filter</span>
         </button>
-        <button class="filter-menu-item" on:click={openDateFilterModal}>
+        <button class="filter-menu-item" onclick={openDateFilterModal}>
           <span class="menu-icon">📅</span>
           <span>Date Filter</span>
         </button>
-        <button class="filter-menu-item" on:click={openContentFilterModal}>
+        <button class="filter-menu-item" onclick={openContentFilterModal}>
           <span class="menu-icon">🔍</span>
           <span>Content Filter</span>
         </button>
@@ -240,8 +237,8 @@
 
 <!-- Tag Filter Modal -->
 {#if showTagFilterModal}
-  <div class="modal-overlay" on:click={() => (showTagFilterModal = false)}>
-    <div class="filter-modal" on:click={(e) => e.stopPropagation()}>
+  <div class="modal-overlay" onclick={() => (showTagFilterModal = false)}>
+    <div class="filter-modal" onclick={(e) => e.stopPropagation()}>
       <h3>Add Tag Filter</h3>
 
       <div class="form-group">
@@ -263,7 +260,7 @@
                 <input
                   type="checkbox"
                   checked={selectedTags.includes(tag)}
-                  on:change={() => toggleTagSelection(tag)}
+                  onchange={() => toggleTagSelection(tag)}
                 />
                 <span>{tag}</span>
               </label>
@@ -275,13 +272,13 @@
       <div class="modal-actions">
         <button
           class="cancel-button"
-          on:click={() => (showTagFilterModal = false)}
+          onclick={() => (showTagFilterModal = false)}
         >
           Cancel
         </button>
         <button
           class="apply-button"
-          on:click={addTagFilter}
+          onclick={addTagFilter}
           disabled={selectedTags.length === 0}
         >
           Apply Filter
@@ -293,8 +290,8 @@
 
 <!-- Date Filter Modal -->
 {#if showDateFilterModal}
-  <div class="modal-overlay" on:click={() => (showDateFilterModal = false)}>
-    <div class="filter-modal" on:click={(e) => e.stopPropagation()}>
+  <div class="modal-overlay" onclick={() => (showDateFilterModal = false)}>
+    <div class="filter-modal" onclick={(e) => e.stopPropagation()}>
       <h3>Add Date Filter</h3>
 
       <div class="form-group">
@@ -322,11 +319,11 @@
       <div class="modal-actions">
         <button
           class="cancel-button"
-          on:click={() => (showDateFilterModal = false)}
+          onclick={() => (showDateFilterModal = false)}
         >
           Cancel
         </button>
-        <button class="apply-button" on:click={addDateFilter}>
+        <button class="apply-button" onclick={addDateFilter}>
           Apply Filter
         </button>
       </div>
@@ -336,8 +333,8 @@
 
 <!-- Content Filter Modal -->
 {#if showContentFilterModal}
-  <div class="modal-overlay" on:click={() => (showContentFilterModal = false)}>
-    <div class="filter-modal" on:click={(e) => e.stopPropagation()}>
+  <div class="modal-overlay" onclick={() => (showContentFilterModal = false)}>
+    <div class="filter-modal" onclick={(e) => e.stopPropagation()}>
       <h3>Add Content Filter</h3>
 
       <div class="form-group">
@@ -353,13 +350,13 @@
       <div class="modal-actions">
         <button
           class="cancel-button"
-          on:click={() => (showContentFilterModal = false)}
+          onclick={() => (showContentFilterModal = false)}
         >
           Cancel
         </button>
         <button
           class="apply-button"
-          on:click={addContentFilter}
+          onclick={addContentFilter}
           disabled={!contentQuery.trim()}
         >
           Apply Filter

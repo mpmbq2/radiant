@@ -42,7 +42,7 @@
     <input
       type="text"
       bind:value={searchInput}
-      on:keydown={handleKeydown}
+      onkeydown={handleKeydown}
       placeholder="Search notes..."
       class="search-input"
     />
@@ -50,7 +50,7 @@
     {#if searchInput}
       <button
         class="clear-button"
-        on:click={clearSearch}
+        onclick={clearSearch}
         aria-label="Clear search"
       >
         <svg

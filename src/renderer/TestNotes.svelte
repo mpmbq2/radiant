@@ -62,7 +62,7 @@
         <div
           class="note-item"
           class:selected={selectedNote?.id === note.id}
-          on:click={() => selectNote(note)}
+          onclick={() => selectNote(note)}
         >
           <div class="note-title">{note.title}</div>
           <div class="note-meta">
@@ -90,14 +90,14 @@
         bind:value={newTags}
         placeholder="Tags (comma-separated)"
       />
-      <button on:click={createNote}>Create Note</button>
+      <button onclick={createNote}>Create Note</button>
     </div>
 
     {#if selectedNote}
       <div class="note-detail">
         <div class="note-header">
           <h2>{selectedNote.title}</h2>
-          <button on:click={() => deleteNote(selectedNote.id)}>Delete</button>
+          <button onclick={() => deleteNote(selectedNote.id)}>Delete</button>
         </div>
         <div class="note-content">{selectedNote.content}</div>
         <div class="note-stats">
