@@ -145,9 +145,8 @@ describe('FileManager', () => {
 
     it('should throw error for non-existent file', () => {
       const filePath = path.join(testDir, 'non-existent.md');
-      expect(() => fileManager.readNote(filePath)).toThrow(
-        'Note file not found'
-      );
+      expect(() => fileManager.readNote(filePath)).toThrow(FileSystemError);
+      expect(() => fileManager.readNote(filePath)).toThrow(/File not found/);
     });
 
     it('should handle notes with multiple tags', () => {
@@ -205,9 +204,10 @@ describe('FileManager', () => {
       expect(fs.existsSync(filePath)).toBe(false);
     });
 
-    it('should not throw error when deleting non-existent file', () => {
+    it('should throw FileSystemError when deleting non-existent file', () => {
       const filePath = path.join(testDir, 'non-existent.md');
-      expect(() => fileManager.deleteNote(filePath)).not.toThrow();
+      expect(() => fileManager.deleteNote(filePath)).toThrow(FileSystemError);
+      expect(() => fileManager.deleteNote(filePath)).toThrow(/File not found/);
     });
   });
 
@@ -422,6 +422,7 @@ describe('FileManager', () => {
           'radiant-restricted-' + Date.now()
         );
         const restrictedFileManager = new FileManager(restrictedDir);
+        const testUuid = '550e8400-e29b-41d4-a716-446655440025';
 
         // Mock fs.mkdirSync to throw EACCES error
         const mkdirError: NodeJS.ErrnoException = new Error(
@@ -433,10 +434,10 @@ describe('FileManager', () => {
         });
         vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
-        expect(() => restrictedFileManager.generateFilePath('test')).toThrow(
+        expect(() => restrictedFileManager.generateFilePath(testUuid)).toThrow(
           FileSystemError
         );
-        expect(() => restrictedFileManager.generateFilePath('test')).toThrow(
+        expect(() => restrictedFileManager.generateFilePath(testUuid)).toThrow(
           /Permission denied/
         );
       });
@@ -480,6 +481,7 @@ describe('FileManager', () => {
           'radiant-full-' + Date.now()
         );
         const fullDiskFileManager = new FileManager(fullDiskDir);
+        const testUuid = '550e8400-e29b-41d4-a716-446655440026';
 
         // Mock fs.mkdirSync to throw ENOSPC error
         const diskFullError: NodeJS.ErrnoException = new Error(
@@ -491,10 +493,10 @@ describe('FileManager', () => {
         });
         vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
-        expect(() => fullDiskFileManager.generateFilePath('test')).toThrow(
+        expect(() => fullDiskFileManager.generateFilePath(testUuid)).toThrow(
           FileSystemError
         );
-        expect(() => fullDiskFileManager.generateFilePath('test')).toThrow(
+        expect(() => fullDiskFileManager.generateFilePath(testUuid)).toThrow(
           /Insufficient disk space/
         );
       });
