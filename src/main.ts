@@ -5,6 +5,7 @@ import { initializeDatabase, closeDatabase } from './database/connection';
 import { runMigrations } from './database/migrations';
 import { registerNotesHandlers } from './ipc/notesHandlers';
 import { registerPreferencesHandlers } from './ipc/preferencesHandlers';
+import { getNotesService } from './services/notesService';
 import { createLogger } from './utils/logger';
 
 const logger = createLogger('Main');
@@ -51,10 +52,16 @@ const createWindow = (): void => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
+app.on('ready', async () => {
   try {
     initializeDatabase();
     runMigrations();
+
+    // Initialize search index with existing notes
+    logger.info('Initializing search index...');
+    const notesService = getNotesService();
+    await notesService.initializeSearch();
+
     registerNotesHandlers();
     registerPreferencesHandlers();
     createWindow();
