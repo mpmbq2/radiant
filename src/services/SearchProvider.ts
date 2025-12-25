@@ -155,13 +155,13 @@ export abstract class SearchProvider {
    * This method is optional and may not be supported by all providers.
    * Default implementation returns an empty array.
    *
-   * @param query - Partial query string
-   * @param options - Suggestion options
+   * @param _query - Partial query string
+   * @param _options - Suggestion options
    * @returns Array of suggested completions
    */
   async getSuggestions(
-    query: string,
-    options?: SuggestionOptions
+    _query: string,
+    _options?: SuggestionOptions
   ): Promise<string[]> {
     // Default implementation - providers can override
     return [];
