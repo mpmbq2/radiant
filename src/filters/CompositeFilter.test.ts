@@ -78,12 +78,12 @@ describe('CompositeFilter', () => {
 
   describe('AND operator', () => {
     it('should match notes that pass all filters', () => {
-      const now = Math.floor(Date.now() / 1000);
+      const now = Date.now();
       const notes = [
-        createNote('1', ['work'], now - 86400), // 1 day ago
-        createNote('2', ['work', 'urgent'], now - 86400),
-        createNote('3', ['urgent'], now - 86400),
-        createNote('4', ['work'], now - 864000), // 10 days ago
+        createNote('1', ['work'], now - 86400000), // 1 day ago (milliseconds)
+        createNote('2', ['work', 'urgent'], now - 86400000),
+        createNote('3', ['urgent'], now - 86400000),
+        createNote('4', ['work'], now - 864000000), // 10 days ago (milliseconds)
       ];
 
       const composite = new CompositeFilter({
@@ -114,9 +114,9 @@ describe('CompositeFilter', () => {
   describe('OR operator', () => {
     it('should match notes that pass any filter', () => {
       const notes = [
-        createNote('1', ['work'], Date.now() / 1000),
-        createNote('2', ['personal'], Date.now() / 1000),
-        createNote('3', ['hobby'], Date.now() / 1000),
+        createNote('1', ['work'], Date.now()),
+        createNote('2', ['personal'], Date.now()),
+        createNote('3', ['hobby'], Date.now()),
       ];
 
       const composite = new CompositeFilter({
@@ -140,9 +140,9 @@ describe('CompositeFilter', () => {
   describe('NOT operator', () => {
     it('should match notes that do not pass the filter', () => {
       const notes = [
-        createNote('1', ['work'], Date.now() / 1000),
-        createNote('2', ['personal'], Date.now() / 1000),
-        createNote('3', ['hobby'], Date.now() / 1000),
+        createNote('1', ['work'], Date.now()),
+        createNote('2', ['personal'], Date.now()),
+        createNote('3', ['hobby'], Date.now()),
       ];
 
       const composite = new CompositeFilter({
@@ -248,8 +248,8 @@ describe('CompositeFilter', () => {
       composite.setChildFilters([]);
 
       const notes = [
-        createNote('1', ['work'], Date.now() / 1000),
-        createNote('2', ['personal'], Date.now() / 1000),
+        createNote('1', ['work'], Date.now()),
+        createNote('2', ['personal'], Date.now()),
       ];
 
       const result = composite.apply(notes);
