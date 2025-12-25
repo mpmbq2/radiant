@@ -18,6 +18,7 @@ import {
   sanitizeNoteTitle,
   sanitizeTagName,
 } from '../utils/validation';
+import { getSearchService } from './searchService';
 
 const logger = createLogger('NotesService');
 
@@ -28,6 +29,25 @@ export class NotesService {
   constructor(notesRepo: NotesRepository, tagsRepo: TagsRepository) {
     this.notesRepo = notesRepo;
     this.tagsRepo = tagsRepo;
+  }
+
+  /**
+   * Initialize the search index with all existing notes
+   * Should be called once at application startup
+   */
+  async initializeSearch(): Promise<void> {
+    try {
+      logger.info('Initializing search index...');
+      const searchService = getSearchService();
+      const notes = await this.getAllNotes();
+      await searchService.indexNotes(notes);
+      logger.info('Search index initialized successfully', {
+        noteCount: notes.length,
+      });
+    } catch (error) {
+      logger.error('Failed to initialize search index', error);
+      throw error;
+    }
   }
 
   /**
@@ -78,13 +98,24 @@ export class NotesService {
       character_count: charCount,
     });
 
-    return {
+    const createdNote = {
       ...note,
       content: input.content || '',
       tags: sanitizedTags,
       word_count: wordCount,
       character_count: charCount,
     };
+
+    // Add to search index
+    try {
+      const searchService = getSearchService();
+      await searchService.addNote(createdNote);
+    } catch (error) {
+      logger.warn('Failed to add note to search index', error);
+      // Don't fail the entire operation if search indexing fails
+    }
+
+    return createdNote;
   }
 
   /**
@@ -196,8 +227,21 @@ export class NotesService {
       this.notesRepo.updateNote(input.id, updates);
     }
 
-    // Return updated note
-    return this.getNoteById(input.id);
+    // Get updated note
+    const updatedNote = await this.getNoteById(input.id);
+
+    // Update search index
+    if (updatedNote) {
+      try {
+        const searchService = getSearchService();
+        await searchService.updateNote(updatedNote);
+      } catch (error) {
+        logger.warn('Failed to update note in search index', error);
+        // Don't fail the entire operation if search indexing fails
+      }
+    }
+
+    return updatedNote;
   }
 
   /**
@@ -214,6 +258,15 @@ export class NotesService {
 
     // Delete file
     fileManager.deleteNote(note.file_path);
+
+    // Remove from search index
+    try {
+      const searchService = getSearchService();
+      await searchService.removeNote(noteId);
+    } catch (error) {
+      logger.warn('Failed to remove note from search index', error);
+      // Don't fail the entire operation if search indexing fails
+    }
   }
 
   /**

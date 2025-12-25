@@ -41,9 +41,7 @@ export class FilterRegistry {
     }
 
     if (typeof type !== 'string') {
-      throw new Error(
-        `Filter type must be a string, received ${typeof type}`
-      );
+      throw new Error(`Filter type must be a string, received ${typeof type}`);
     }
 
     if (type.trim().length === 0) {
@@ -106,7 +104,10 @@ export class FilterRegistry {
         throw new Error('Filter metadata "category" must be a string');
       }
 
-      if (metadata.category !== undefined && metadata.category.trim().length === 0) {
+      if (
+        metadata.category !== undefined &&
+        metadata.category.trim().length === 0
+      ) {
         throw new Error('Filter metadata "category" cannot be empty');
       }
 
@@ -114,9 +115,7 @@ export class FilterRegistry {
         metadata.configSchema !== undefined &&
         typeof metadata.configSchema !== 'function'
       ) {
-        throw new Error(
-          'Filter metadata "configSchema" must be a function'
-        );
+        throw new Error('Filter metadata "configSchema" must be a function');
       }
 
       if (metadata.example !== undefined) {
@@ -132,15 +131,11 @@ export class FilterRegistry {
         }
 
         if (!('type' in metadata.example)) {
-          throw new Error(
-            'Filter metadata "example" must have a "type" field'
-          );
+          throw new Error('Filter metadata "example" must have a "type" field');
         }
 
         if (typeof metadata.example.type !== 'string') {
-          throw new Error(
-            'Filter metadata "example.type" must be a string'
-          );
+          throw new Error('Filter metadata "example.type" must be a string');
         }
       }
     }

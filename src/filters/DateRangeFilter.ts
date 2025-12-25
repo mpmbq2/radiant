@@ -233,7 +233,8 @@ export class DateRangeFilter extends FilterInterface {
 
     // Convert custom start/end from seconds to milliseconds for comparison with database timestamps
     return {
-      start: this.config.start !== undefined ? this.config.start * 1000 : undefined,
+      start:
+        this.config.start !== undefined ? this.config.start * 1000 : undefined,
       end: this.config.end !== undefined ? this.config.end * 1000 : undefined,
     };
   }
@@ -313,7 +314,9 @@ export class DateRangeFilter extends FilterInterface {
 
       case DateRangePreset.LAST_WEEK: {
         // Complete previous week (Monday-Sunday)
-        const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+        const lastWeekStart = startOfWeek(subWeeks(now, 1), {
+          weekStartsOn: 1,
+        });
         const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
         return {
           start: lastWeekStart.getTime(),
